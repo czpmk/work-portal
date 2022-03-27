@@ -10,6 +10,7 @@ namespace WorkPortalAPI.Repositories
     {
         Task<IEnumerable<Departament>> Get();
         Task<Departament> Get(int id);
+        Task<IEnumerable<Departament>> GetByCompanyId(int companyId);
         Task<Departament> Create(Departament departament);
         Task Update(Departament departament);
         Task Delete(int id);

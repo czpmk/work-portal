@@ -31,5 +31,12 @@ namespace WorkPortalAPI.Controllers
         {
             return await _departamentRepository.Get(id);
         }
+
+        [HttpGet("byCompanyId/{companyId}")]
+        public async Task<IEnumerable<Departament>> GetByCompanyId(int companyId)
+        {
+            //var cc = DependencyResolver.Current.GetService<CompanyController>();
+            return await _departamentRepository.GetByCompanyId(companyId);
+        }
     }
 }

@@ -11,11 +11,11 @@ namespace WorkPortalAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UsersController : ControllerBase
+    public class UserController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
 
-        public UsersController(IUserRepository userRepository)
+        public UserController(IUserRepository userRepository)
         {
             this._userRepository = userRepository;
         }

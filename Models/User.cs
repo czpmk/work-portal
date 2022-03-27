@@ -30,9 +30,6 @@ namespace WorkPortalAPI.Models
         [Column("privilege_level")]
         public string PrivilegeLevel { get; set; }
 
-        [Column("company_id")]
-        public int CompanyId { get; set; }
-
         [Column("salt")]
         public string Salt { get; set; }
 

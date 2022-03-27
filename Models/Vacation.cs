@@ -34,7 +34,7 @@ namespace WorkPortalAPI.Models
         [Column("state")]
         public VacationRequestState State { get; set; }
 
-        [Column("state_change_time")]
+        [Column("modification_time")]
         public DateTime ModificationTime { get; set; }
 
         [Column("start_date")]

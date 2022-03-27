@@ -23,7 +23,7 @@ namespace WorkPortalAPI.Models
         public StatusType Type { get; set; }
 
         // TODO: setter: set(x: DateTime) => ToString("yyyy-MM-dd HH:mm:ss.fff") if required 
-        [Column("datetime")]
+        [Column("timestamp")]
         public DateTime Timestamp { get; set; }
 
         [Column("user_id")]

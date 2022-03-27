@@ -11,25 +11,25 @@ namespace WorkPortalAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UserController : ControllerBase
+    public class StatusController
     {
-        private readonly IUserRepository _userRepository;
+        private readonly IStatusRepository _statusRepository;
 
-        public UserController(IUserRepository userRepository)
+        public StatusController(IStatusRepository statusRepository)
         {
-            this._userRepository = userRepository;
+            this._statusRepository = statusRepository;
         }
 
         [HttpGet]
-        public async Task<IEnumerable<User>> Get()
+        public async Task<IEnumerable<Status>> Get()
         {
-            return await _userRepository.Get();
+            return await _statusRepository.Get();
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<User>> Get(int id)
+        public async Task<ActionResult<Status>> Get(int id)
         {
-            return await _userRepository.Get(id);
+            return await _statusRepository.Get(id);
         }
     }
 }

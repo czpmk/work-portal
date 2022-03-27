@@ -33,8 +33,14 @@ namespace WorkPortalAPI
         {
             services.AddControllers();
 
+            services.AddScoped<ICompanyRepository, CompanyRepository>();
+            services.AddScoped<IDepartamentRepository, DepartamentRepository>();
+            services.AddScoped<IRoleRepository, RoleRepository>();
+            services.AddScoped<IStatusRepository, StatusRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IAuthRepository, AuthRepository>();
+            services.AddScoped<IVacationRepository, VacationRepository>();
+
             services.AddDbContext<WPContext>(o => o.UseSqlServer(Configuration.GetConnectionString("WPConnection")));
 
             services.AddSwaggerGen(c =>

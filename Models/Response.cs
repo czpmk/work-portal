@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace WorkPortalAPI.Models
 {
-    public enum ErrorCode
+    public enum ReturnCode
     {
         SUCCESS = 0,
         INVALID_LOGIN_OR_PASSWORD = 1,
@@ -14,20 +14,24 @@ namespace WorkPortalAPI.Models
 
     public class Response
     {
-        //if no error code is provided then it's success
-        Response(Object _data)
+        public Response()
         {
-            this.ErrorCode = ErrorCode.SUCCESS;
+            this.ReturnCode = ReturnCode.SUCCESS;
+            this.Data = new Object();
+        }
+        public Response(Object _data)
+        {
+            this.ReturnCode = ReturnCode.SUCCESS;
             this.Data = _data;
         }
 
-        Response(ErrorCode _ec, Object _data)
+        public Response(ReturnCode _ec, Object _data)
         {
-            this.ErrorCode = _ec;
+            this.ReturnCode = _ec;
             this.Data = _data;
         }
 
-        public ErrorCode ErrorCode { get; set; }
+        public ReturnCode ReturnCode { get; set; }
 
         public Object Data { get; set; }
     }

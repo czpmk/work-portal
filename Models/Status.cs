@@ -18,11 +18,14 @@ namespace WorkPortalAPI.Models
     {
         [Column("id")]
         public int Id { get; set; }
+
         [Column("type")]
         public StatusType Type { get; set; }
+
         // TODO: setter: set(x: DateTime) => ToString("yyyy-MM-dd HH:mm:ss.fff") if required 
         [Column("datetime")]
         public DateTime Timestamp { get; set; }
+
         [Column("user_id")]
         public int UserId { get; set; }
     }

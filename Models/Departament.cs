@@ -11,8 +11,10 @@ namespace WorkPortalAPI.Models
     {
         [Column("id")]
         public int Id { get; set; }
+
         [Column("company_id")]
         public int CompanyId { get; set; }
+
         [Column("name")]
         public string Name { get; set; }
     }

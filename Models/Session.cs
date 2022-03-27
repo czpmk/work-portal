@@ -17,9 +17,6 @@ namespace WorkPortalAPI.Models
         [Column("user_id")]
         public int UserId { get; set; }
 
-        [Column("company_id")] // TODO: remove
-        public int Company { get; set; }
-
         [Column("expiry_time")]
         public DateTime ExpiryTime { get; set; }
     }

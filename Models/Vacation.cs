@@ -28,9 +28,6 @@ namespace WorkPortalAPI.Models
         [Column("user_id")]
         public int UserId { get; set; }
 
-        [Column("company_id")]
-        public int CompanyId { get; set; }
-
         [Column("type")]
         public VacationType Type { get; set; }
 

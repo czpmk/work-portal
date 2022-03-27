@@ -11,7 +11,7 @@ namespace work_portal.Models
         Administrator = 2
     }
 
-    [Table("users_roles")]
+    [Table("roles")]
     public class Role
     {
         [Column("id")]
@@ -22,7 +22,7 @@ namespace work_portal.Models
         public int CompanyId { get; set; }
         [Column("departament_id")]
         public int DepartamentId { get; set; }
-        [Column("type")] // TODO: change type to int
+        [Column("type")]
         public RoleType Type { get; set; }
     }
 }

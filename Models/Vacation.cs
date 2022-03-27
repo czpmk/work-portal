@@ -19,7 +19,7 @@ namespace work_portal.Models
         REJECTED = 3
     }
 
-    [Table("vacation_history")]
+    [Table("vacations")]
     public class Vacation
     {
         [Column("id")]
@@ -31,11 +31,11 @@ namespace work_portal.Models
         [Column("company_id")]
         public int CompanyId { get; set; }
 
-        [Column("vacation_type_id")] // TODO: change name to type
+        [Column("type")]
         public VacationType Type { get; set; }
 
-        [Column("state")] // TODO: change name to request_state, type to int in DB
-        public VacationRequestState RequestState { get; set; }
+        [Column("state")]
+        public VacationRequestState State { get; set; }
 
         [Column("state_change_time")]
         public DateTime ModificationTime { get; set; }

@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace work_portal.Models
+namespace WorkPortalAPI.Models
 {
     public enum StatusType { 
         Work = 1,

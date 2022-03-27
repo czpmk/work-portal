@@ -7,12 +7,17 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.SqlServer;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using WorkPortalAPI.Models;
+using WorkPortalAPI.Repositories;
+using Microsoft.Data.SqlClient;
 
-namespace work_portal
+namespace WorkPortalAPI
 {
     public class Startup
     {
@@ -26,11 +31,14 @@ namespace work_portal
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
             services.AddControllers();
+
+            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddDbContext<WPContext>(o => o.UseSqlServer(Configuration.GetConnectionString("WPConnection")));
+
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "work_portal", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "WorkPortalAPI", Version = "v1" });
             });
         }
 
@@ -41,7 +49,7 @@ namespace work_portal
             {
                 app.UseDeveloperExceptionPage();
                 app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "work_portal v1"));
+                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "WorkPortalAPI v1"));
             }
 
             app.UseHttpsRedirection();

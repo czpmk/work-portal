@@ -27,8 +27,8 @@ namespace WorkPortalAPI.Models
         [Column("profile_pic")]
         public string ProfilePicture { get; set; }
 
-        [Column("privilege_level")]
-        public string PrivilegeLevel { get; set; }
+        [Column("is_admin")]
+        public bool IsAdmin { get; set; }
 
         [Column("salt")]
         public string Salt { get; set; }

@@ -34,6 +34,7 @@ namespace WorkPortalAPI
             services.AddControllers();
 
             services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IAuthRepository, AuthRepository>();
             services.AddDbContext<WPContext>(o => o.UseSqlServer(Configuration.GetConnectionString("WPConnection")));
 
             services.AddSwaggerGen(c =>

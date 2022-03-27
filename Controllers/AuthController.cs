@@ -14,10 +14,12 @@ namespace WorkPortalAPI.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthRepository _authRepository;
+        private readonly IUserRepository _userRepository;
 
-        public AuthController(IAuthRepository authRepository)
+        public AuthController(IAuthRepository authRepository, IUserRepository userRepository)
         {
             this._authRepository = authRepository;
+            this._userRepository = userRepository;
         }
 
         [HttpPost("login")]
@@ -29,7 +31,14 @@ namespace WorkPortalAPI.Controllers
         [HttpPost("register")]
         public async Task<Response> Register(User user)
         {
-            return await _authRepository.Register(user);
+            // TODO:
+            // data validation
+            // generate salt
+            // hash the password
+            // add a proper response
+            var r = new Response();
+            await _userRepository.Create(user);
+            return r;
         }
 
         [HttpPost("logout")]

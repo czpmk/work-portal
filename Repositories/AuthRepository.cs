@@ -28,6 +28,7 @@ namespace WorkPortalAPI.Repositories
             throw new NotImplementedException();
         }
 
+        // TODO: remove?
         public Task<Response> Register(User user)
         {
             throw new NotImplementedException();

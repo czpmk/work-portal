@@ -1,6 +1,6 @@
 using System;
 
-namespace work_portal
+namespace WorkPortalAPI
 {
     public class WeatherForecast
     {

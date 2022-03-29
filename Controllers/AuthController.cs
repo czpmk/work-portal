@@ -6,6 +6,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using WorkPortalAPI.Repositories;
 using WorkPortalAPI.Models;
+using System.Text;
+using System.Security.Cryptography;
 
 namespace WorkPortalAPI.Controllers
 {
@@ -25,7 +27,31 @@ namespace WorkPortalAPI.Controllers
         [HttpPost("login")]
         public async Task<Response> Login(Credentials credentials)
         {
-            return await _authRepository.Login(credentials);
+            //find user from credentials
+            List<User> foundUsers = await _authRepository.FindUsersByEmail(credentials.Email);
+
+            //if more than one user found
+            if (foundUsers.Count > 1)
+            {
+                return new Response(ReturnCode.INTERNAL_ERROR, null);
+            }
+            //if user not found
+            else if (foundUsers.Count != 1)
+            {
+                return new Response(ReturnCode.INVALID_LOGIN_OR_PASSWORD, null);
+            }
+
+            User user = foundUsers.First();
+            
+            //if password is invalid return error
+            if(ComputeSHA256Hash(user.Salt + credentials.PasswordHash) != user.Password)
+            {
+                return new Response(ReturnCode.INVALID_LOGIN_OR_PASSWORD, null);
+            }
+
+            //create session
+            string token = await _authRepository.CreateSession(user.Id);
+            return new Response(0, token);
         }
 
         [HttpPost("register")]
@@ -44,7 +70,40 @@ namespace WorkPortalAPI.Controllers
         [HttpPost("logout")]
         public async Task<Response> Logout(String token)
         {
-            return await _authRepository.Logout(token);
+            //find user from credentials
+            List<Session> foundSessions = await _authRepository.FindSessionsByToken(token);
+
+            //if session not found return error
+            if (foundSessions.Count == 0)
+            {
+                return new Response(ReturnCode.INVALID_SESSION_TOKEN, null);
+            }
+            
+            //delete all found sessions
+            foreach(Session session in foundSessions)
+            {
+                await _authRepository.InvalidateSession(session);
+            }
+
+            var r = new Response();
+            return r;
+        }
+
+        private static string ComputeSHA256Hash(string rawData)
+        { 
+            using (SHA256 sha256Hash = SHA256.Create())
+            {
+                // ComputeHash - returns byte array  
+                byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(rawData));
+
+                // Convert byte array to a string   
+                StringBuilder builder = new();
+                for (int i = 0; i < bytes.Length; i++)
+                {
+                    builder.Append(bytes[i].ToString("x2"));
+                }
+                return builder.ToString();
+            }
         }
     }
 }

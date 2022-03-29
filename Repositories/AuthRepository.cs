@@ -16,16 +16,39 @@ namespace WorkPortalAPI.Repositories
             this._context = context;
         }
 
-        public Task<Response> Login(Credentials credentials)
+        //returns token string of created session
+        public async Task<string> CreateSession(int _userID)
         {
-            throw new NotImplementedException();
-            //var dbResponse = from user in _context.Users where user.Email.Equals(credentials.Email) select user;
-            //if(dbResponse.Count())
+            string _token = Guid.NewGuid().ToString().Replace("-", "");
+            Session session = new();
+            session.UserId = _userID;
+            session.Token = _token;
+            session.ExpiryTime = DateTime.Now.AddHours(12);
+
+            _context.Sessions.Add(session);
+            await _context.SaveChangesAsync();
+
+            return _token;
         }
 
-        public Task<Response> Logout(string token)
+        //TODO: Move to UserRepository?
+        public async Task<List<User>> FindUsersByEmail(string _email)
         {
-            throw new NotImplementedException();
+            var query = from user in _context.Users where user.Email.Equals(_email) select user;
+            return await query.ToListAsync();
+        }
+
+        public async Task<List<Session>> FindSessionsByToken(string _token)
+        {
+            var query = from session in _context.Sessions where session.Token.Equals(_token) select session;
+            return await query.ToListAsync();
+        }
+
+        public async Task<Session> InvalidateSession(Session session)
+        {
+            _context.Sessions.Remove(session);
+            await _context.SaveChangesAsync();
+            return session;
         }
 
         // TODO: remove?

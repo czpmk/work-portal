@@ -10,6 +10,8 @@ namespace WorkPortalAPI.Models
     {
         SUCCESS = 0,
         INVALID_LOGIN_OR_PASSWORD = 1,
+        INVALID_SESSION_TOKEN = 2,
+        INTERNAL_ERROR = 3,
     }
 
     public class Response

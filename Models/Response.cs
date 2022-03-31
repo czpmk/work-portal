@@ -12,6 +12,9 @@ namespace WorkPortalAPI.Models
         INVALID_LOGIN_OR_PASSWORD = 1,
         INVALID_SESSION_TOKEN = 2,
         INTERNAL_ERROR = 3,
+        INVALID_ARGUMENT = 4,
+        ARGUMENT_ALREADY_EXISTS = 5,
+        ARGUMENT_DOES_NOT_EXIST = 6,
     }
 
     public class Response

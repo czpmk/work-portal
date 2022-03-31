@@ -51,10 +51,11 @@ namespace WorkPortalAPI.Repositories
             return session;
         }
 
-        // TODO: remove?
-        public Task<Response> Register(User user)
+        public async Task<User> CreateUser(User user)
         {
-            throw new NotImplementedException();
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+            return user;
         }
     }
 }

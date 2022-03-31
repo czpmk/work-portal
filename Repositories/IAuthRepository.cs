@@ -8,7 +8,7 @@ namespace WorkPortalAPI.Repositories
 {
     public interface IAuthRepository
     {
-        Task<Response> Register(User user);
+        Task<User> CreateUser(User user);
         Task<List<User>> FindUsersByEmail(string email);
         Task<List<Session>> FindSessionsByToken(string _token);
         Task<string> CreateSession(int _userID);

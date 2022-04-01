@@ -26,8 +26,10 @@
         }
         stage('Deploy'){
              steps{
-			   sh 'cp -r -u WorkPortalAPI/bin/Debug/net5.0/publish/ /var/www/publish/'
-               sh 'service workportal restart'
+                sh 'rm WorkPortalAPI/bin/Debug/net5.0/publish/appsettings.json'
+                sh 'cp -r -u WorkPortalAPI/bin/Debug/net5.0/publish/ /var/www/publish/'
+                sh 'service workportal restart'
              }
         }
     }
+}

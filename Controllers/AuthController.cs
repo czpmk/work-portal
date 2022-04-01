@@ -80,7 +80,8 @@ namespace WorkPortalAPI.Controllers
                 return new Response(ReturnCode.INVALID_ARGUMENT,
                                     new Dictionary<string, string>() { { "ArgumentName", "language" } });
 
-            else // success
+            // success
+            else
                 await _authRepository.CreateUser(user);
 
             // log in

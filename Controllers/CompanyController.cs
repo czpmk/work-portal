@@ -31,8 +31,8 @@ namespace WorkPortalAPI.Controllers
             return await _companyRepository.Get(id);
         }
 
-        [HttpGet("TestMethodToDelete6")]
-        public async Task<IEnumerable<Company>> TestMethodToDelete6()
+        [HttpGet("TestMethodToDelete7")]
+        public async Task<IEnumerable<Company>> TestMethodToDelete7()
         {
             return await _companyRepository.Get();
         }

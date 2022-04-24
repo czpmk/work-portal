@@ -81,5 +81,16 @@ namespace WorkPortalAPI.Repositories
                 return true;
             }
         }
+
+        public async Task<User> FindUserByToken(string token)
+        {
+            if (!(await SessionValid(token)))
+                return null;
+
+            var session = (await FindSessionsByToken(token)).FirstOrDefault();
+            if (session == null)
+                return null;
+            return await _context.Users.FindAsync(session.UserId);
+        }
     }
 }

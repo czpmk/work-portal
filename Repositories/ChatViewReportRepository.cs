@@ -33,24 +33,34 @@ namespace WorkPortalAPI.Repositories
             return await _context.ChatViewReports.AnyAsync(c => c.Id == id);
         }
 
+        public async Task<Boolean> Exists(int userId, int chatId)
+        {
+            return await _context.ChatViewReports.AnyAsync(c => c.UserId == userId && c.ChatId == chatId);
+        }
+
         public async Task<ChatViewReport> Get(int id)
         {
             return await _context.ChatViewReports.FindAsync(id);
         }
 
-        public async Task<string> GetLastSeenMessageID(int chatId)
+        public async Task<Message> GetLastSeenMessage(int chatId, int userId)
         {
-            var report = await _context.ChatViewReports.Where(c => c.ChatId == chatId).FirstOrDefaultAsync();
+            var report = await _context.ChatViewReports.Where(c => c.ChatId == chatId && c.UserId == userId).FirstOrDefaultAsync();
             if (report == null)
                 return null;
             else
-                return report.MessageUUID;
+                return await _context.Messages.FindAsync(report.MessageUUID);
         }
 
         public async Task Update(ChatViewReport chatViewReport)
         {
             _context.Entry(chatViewReport).State = EntityState.Modified;
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<ChatViewReport>> GetReportsForUser(int userId)
+        {
+            return await _context.ChatViewReports.Where(c => c.UserId == userId).ToListAsync();
         }
     }
 }

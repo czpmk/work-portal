@@ -7,6 +7,12 @@ using System.Threading.Tasks;
 
 namespace WorkPortalAPI.Models
 {
+    public enum ChatViewStatus
+    {
+        UP_TO_DATE = 0,
+        NEW_MESSAGES_AWAITING = 1
+    }
+
     [Table("chat_view_report")]
     public class ChatViewReport
     {

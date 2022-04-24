@@ -6,13 +6,15 @@ using System.Threading.Tasks;
 
 namespace WorkPortalAPI.Repositories
 {
-    interface IChatViewReportRepository
+    public interface IChatViewReportRepository
     {
         Task<ChatViewReport> Get(int id);
+        Task<IEnumerable<ChatViewReport>> GetReportsForUser(int userId);
         Task<ChatViewReport> Create(ChatViewReport chatViewReport);
         Task Update(ChatViewReport chatViewReport);
         Task Delete(int id);
         Task<Boolean> Exists(int id);
-        Task<string> GetLastSeenMessageID(int chatId);
+        Task<Boolean> Exists(int userId, int chatId);
+        Task<Message> GetLastSeenMessage(int chatId, int userId);
     }
 }

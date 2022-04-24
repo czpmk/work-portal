@@ -18,12 +18,14 @@ namespace WorkPortalAPI.Controllers
         private readonly IAuthRepository _authRepository;
         private readonly IChatRepository _chatRepository;
         private readonly IMessageRepository _messageRepository;
+        private readonly IChatViewReportRepository _chatViewReportRepository;
 
-        public ChatController(IAuthRepository authRepository, IChatRepository chatRepository, IMessageRepository messageRepository)
+        public ChatController(IAuthRepository authRepository, IChatRepository chatRepository, IMessageRepository messageRepository, IChatViewReportRepository chatViewReportRepository)
         {
             this._authRepository = authRepository;
             this._chatRepository = chatRepository;
             this._messageRepository = messageRepository;
+            this._chatViewReportRepository = chatViewReportRepository;
         }
 
         [HttpGet]
@@ -81,6 +83,39 @@ namespace WorkPortalAPI.Controllers
             var messages = await _chatRepository.GetMessagesSince(chatId, lastMessage);
 
             return WPResponse.Create(messages);
+        }
+
+        [HttpGet("getNewMessageReport")]
+        public async Task<IActionResult> GetNewMessageReport(string token)
+        {
+            // TODO: check if action legal (user can view the messages)
+
+            var requestingUser = await _authRepository.FindUserByToken(token);
+            if (requestingUser == null)
+                return WPResponse.CreateArgumentInvalidResponse("token");
+
+            var viewingReports = await _chatViewReportRepository.GetReportsForUser(requestingUser.Id);
+
+            var newMessageReports = new Dictionary<int, ChatViewStatus>();
+
+            foreach (var r in viewingReports)
+            {
+                var status = ChatViewStatus.NEW_MESSAGES_AWAITING;
+
+                if (!(await _chatViewReportRepository.Exists(requestingUser.Id, r.ChatId)))
+                {
+                    status = ChatViewStatus.NEW_MESSAGES_AWAITING;
+                }
+                else
+                {
+                    var lastViewed = await _chatViewReportRepository.GetLastSeenMessage(r.ChatId, requestingUser.Id);
+                    var lastPosted = await _chatRepository.GetLastMessage(r.ChatId);
+
+                    status = lastViewed.UUID == lastPosted.UUID ? ChatViewStatus.UP_TO_DATE : ChatViewStatus.NEW_MESSAGES_AWAITING;
+                }
+                newMessageReports.Add(r.ChatId, status);
+            }
+            return WPResponse.Create(newMessageReports);
         }
     }
 }

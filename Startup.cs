@@ -42,6 +42,7 @@ namespace WorkPortalAPI
             services.AddScoped<IVacationRepository, VacationRepository>();
             services.AddScoped<IMessageRepository, MessageRepository>();
             services.AddScoped<IChatRepository, ChatRepository>();
+            services.AddScoped<IChatViewReportRepository, ChatViewReportRepository>();
 
             services.AddDbContext<WPContext>(o => o.UseSqlServer(Configuration.GetConnectionString("WPConnection")));
 

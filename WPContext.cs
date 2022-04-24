@@ -23,5 +23,6 @@ namespace WorkPortalAPI.Models
         public DbSet<Vacation> Vacations { get; set; }
         public DbSet<Message> Messages { get; set; }
         public DbSet<Chat> Chats { get; set; }
+        public DbSet<ChatViewReport> ChatViewReports { get; set; }
     }
 }

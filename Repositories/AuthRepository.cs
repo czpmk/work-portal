@@ -19,7 +19,7 @@ namespace WorkPortalAPI.Repositories
         //returns token string of created session
         public async Task<string> CreateSession(int _userID)
         {
-            string _token = Guid.NewGuid().ToString().Replace("-", "");
+            string _token = Utils.NewUUID();
             Session session = new();
             session.UserId = _userID;
             session.Token = _token;
@@ -44,11 +44,19 @@ namespace WorkPortalAPI.Repositories
             return await query.ToListAsync();
         }
 
-        public async Task<Session> InvalidateSession(Session session)
+        public async Task<Session> TerminateSession(Session session)
         {
             _context.Sessions.Remove(session);
             await _context.SaveChangesAsync();
             return session;
+        }
+
+        public async Task<string> TerminateSession(string token)
+        {
+            var sessions = await FindSessionsByToken(token);
+            foreach (var s in sessions)
+                await TerminateSession(s);
+            return token;
         }
 
         public async Task<User> CreateUser(User user)
@@ -61,24 +69,16 @@ namespace WorkPortalAPI.Repositories
         public async Task<Boolean> SessionValid(string token)
         {
             var sessions = await _context.Sessions.Where(s => s.Token == token).ToListAsync();
-            if (sessions.Any())
-            {
-                // multiple sessions with the same token, or session expired
-                if (sessions.Count() != 1 || sessions.First().ExpiryTime < DateTime.Now)
-                {
-                    _context.Remove(token);
-                    return false;
-                }
-                // session valid OK
-                else
-                {
-                    return true;
-                }
-            }
-            // session with the token given not found
-            else
+
+            // multiple sessions with the same token, or session expired
+            if (!sessions.Any() || sessions.Count() != 1 || sessions.First().ExpiryTime < DateTime.Now)
             {
                 return false;
+            }
+            // session valid OK
+            else
+            {
+                return true;
             }
         }
     }

@@ -10,18 +10,15 @@ namespace WorkPortalAPI.Models
     [Table("messages")]
     public class Message
     {
-        [Required(AllowEmptyStrings = true)]
-        [Column("id")]
-        public int Id { get; set; }
+        [Column("uuid")]
+        [Key]
+        public string UUID { get; set; }
 
         [Column("chat_id")]
         public int ChatId { get; set; }
 
         [Column("user_id")]
         public int UserId { get; set; }
-
-        [Column("uuid")]
-        public string MessageUUID { get; set; }
 
         [Column("timestamp")]
         public DateTime Timestamp { get; set; }

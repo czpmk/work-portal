@@ -3,41 +3,58 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace WorkPortalAPI.Models
 {
     public enum ReturnCode
     {
-        SUCCESS = 0,
-        INVALID_LOGIN_OR_PASSWORD = 1,
-        INVALID_SESSION_TOKEN = 2,
-        INTERNAL_ERROR = 3,
-        INVALID_ARGUMENT = 4,
-        ARGUMENT_ALREADY_EXISTS = 5,
-        ARGUMENT_DOES_NOT_EXIST = 6,
+        SUCCESS = 200,
+        INTERNAL_ERROR = 500,
+        AUTHENTICATION_INVALID = 461,
+        INVALID_ARGUMENT = 462,
+        ARGUMENT_ALREADY_EXISTS = 463,
+        ARGUMENT_DOES_NOT_EXIST = 464,
     }
 
-    public class Response
+    public static class WPResponse
     {
-        public Response()
+        public static IActionResult Create(object result, ReturnCode returnCode = ReturnCode.SUCCESS)
         {
-            this.ReturnCode = ReturnCode.SUCCESS;
-            this.Data = new Object();
-        }
-        public Response(Object _data)
-        {
-            this.ReturnCode = ReturnCode.SUCCESS;
-            this.Data = _data;
-        }
-
-        public Response(ReturnCode _ec, Object _data)
-        {
-            this.ReturnCode = _ec;
-            this.Data = _data;
+            var objRes = new ObjectResult(new Dictionary<string, object> {
+                { "reason", returnCode == ReturnCode.SUCCESS ? null : ReturnCodeToString(returnCode) },
+                { "result", result },
+            });
+            objRes.StatusCode = (int)returnCode;
+            return objRes;
         }
 
-        public ReturnCode ReturnCode { get; set; }
+        public static IActionResult Create(object key, object value, ReturnCode returnCode = ReturnCode.SUCCESS)
+        {
+            var objRes = new ObjectResult(new Dictionary<object, object> {
+                { "reason", returnCode == ReturnCode.SUCCESS ? null : ReturnCodeToString(returnCode) },
+                { "result", null },
+                { key, value }
+            });
+            objRes.StatusCode = (int)returnCode;
+            return objRes;
+        }
 
-        public Object Data { get; set; }
+        public static IActionResult Create(ReturnCode returnCode = ReturnCode.SUCCESS)
+        {
+            return Create(null, returnCode);
+        }
+
+        public static IActionResult CreateArgumentInvalidResponse(string argumentName)
+        {
+            return Create("argument_name", argumentName, ReturnCode.INVALID_ARGUMENT);
+        }
+
+        public static string ReturnCodeToString(ReturnCode returnCode)
+        {
+            return Enum.GetName(typeof(ReturnCode), returnCode);
+        }
     }
 }

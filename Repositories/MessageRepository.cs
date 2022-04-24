@@ -22,16 +22,9 @@ namespace WorkPortalAPI.Repositories
             return message;
         }
 
-        public async Task Delete(int id)
+        public async Task Delete(string UUID)
         {
-            var message = await _context.Messages.FindAsync(id);
-            _context.Messages.Remove(message);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task Delete(string messageUUID)
-        {
-            var message = _context.Messages.FirstOrDefault(m => m.MessageUUID == messageUUID);
+            var message = _context.Messages.FirstOrDefault(m => m.UUID == UUID);
             if (message != null)
             {
                 _context.Messages.Remove(message);
@@ -54,14 +47,11 @@ namespace WorkPortalAPI.Repositories
         {
             var lastSeenMessage = _context.Messages.FindAsync(lastMessageUUID);
             return await _context.Messages.Where(m => m.ChatId == chatId &&
-                        lastSeenMessage.Result.Timestamp > m.Timestamp).ToListAsync();
+                        m.Timestamp > lastSeenMessage.Result.Timestamp).ToListAsync();
         }
 
         public async Task Update(Message message)
         {
-            var oldMessage = _context.Messages.FindAsync(message.Id);
-            message.Id = oldMessage.Result.Id;
-            message.MessageUUID = oldMessage.Result.MessageUUID;
             _context.Entry(message).State = EntityState.Modified;
             await _context.SaveChangesAsync();
         }

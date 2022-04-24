@@ -28,6 +28,7 @@ namespace WorkPortalAPI.Controllers
         [HttpGet("all")]
         public async Task<IEnumerable<Message>> Get()
         {
+
             return await _messageRepository.GetAll();
         }
 
@@ -40,18 +41,23 @@ namespace WorkPortalAPI.Controllers
         [HttpGet("{chatId}/{messageUUID}")]
         public async Task<IEnumerable<Message>> Get(int chatId, string messageUUID)
         {
-            //var cc = DependencyResolver.Current.GetService<CompanyController>();
             return await _messageRepository.GetFromChatSince(chatId, messageUUID);
         }
 
         [HttpPost("add")]
-        public async Task<Response> AddMessage(Message message, String token)
+        public async Task<IActionResult> AddMessage(Message message, String token)
         {
-            if (await _authRepository.SessionValid(token))
+            var newUserId = Utils.NewUUID();
+
+            if (!(await _authRepository.SessionValid(token)))
             {
-                _messageRepository.Create(message);
+                await _authRepository.TerminateSession(token);
+                return WPResponse.Create(ReturnCode.AUTHENTICATION_INVALID);
             }
-            return new Models.Response();
+
+            _messageRepository.Create(message);
+
+            return WPResponse.Create();
         }
     }
 }

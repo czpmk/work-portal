@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,8 +8,6 @@ using System.Threading.Tasks;
 using WorkPortalAPI.Repositories;
 using WorkPortalAPI.Models;
 using System.ComponentModel.DataAnnotations;
-using System.Text;
-using System.Security.Cryptography;
 
 namespace WorkPortalAPI.Controllers
 {
@@ -26,104 +25,74 @@ namespace WorkPortalAPI.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<Response> Login(Credentials credentials)
+        public async Task<IActionResult> Login(Credentials credentials)
         {
             //find user from credentials
             List<User> foundUsers = await _authRepository.FindUsersByEmail(credentials.Email);
 
             //if more than one user found
             if (foundUsers.Count > 1)
-            {
-                return new Response(ReturnCode.INTERNAL_ERROR, null);
-            }
+                return WPResponse.Create(ReturnCode.INTERNAL_ERROR);
+
             //if user not found
-            else if (foundUsers.Count != 1)
-            {
-                return new Response(ReturnCode.INVALID_LOGIN_OR_PASSWORD, null);
-            }
+            if (foundUsers.Count != 1)
+                return WPResponse.Create(ReturnCode.AUTHENTICATION_INVALID);
 
             User user = foundUsers.First();
-
             //if password is invalid return error
-            if (ComputeSHA256Hash(user.Salt + credentials.PasswordHash) != user.Password)
-            {
-                return new Response(ReturnCode.INVALID_LOGIN_OR_PASSWORD, null);
-            }
+            if (Utils.GetSHA256HashOf(user.Salt + credentials.PasswordHash) != user.Password)
+                return WPResponse.Create(ReturnCode.AUTHENTICATION_INVALID);
 
-            //create session
+            // all ok
             string token = await _authRepository.CreateSession(user.Id);
-            return new Response(0, token);
+            return WPResponse.Create(token);
         }
 
         [HttpPost("register")]
-        public async Task<Response> Register(User user)
+        public async Task<IActionResult> Register(User user)
         {
             var validLangs = new List<string>() { "polish", "english" };
-            user.Salt = Guid.NewGuid().ToString().Replace("-", "");
+            user.Salt = Utils.NewUUID();
 
             var passwordRaw = user.Password;
-            user.Password = ComputeSHA256Hash(user.Salt + passwordRaw);
+            user.Password = Utils.GetSHA256HashOf(user.Salt + passwordRaw);
 
             if (user.IsAdmin != true)
                 user.IsAdmin = false;
 
             // validate
             if (!new EmailAddressAttribute().IsValid(user.Email))
-                return new Response(ReturnCode.INVALID_ARGUMENT,
-                                    new Dictionary<string, string>() { { "ArgumentName", "email" } });
+                return WPResponse.CreateArgumentInvalidResponse("email");
 
-            else if ((await _authRepository.FindUsersByEmail(user.Email)).Any())
-                return new Response(ReturnCode.ARGUMENT_ALREADY_EXISTS,
-                                    new Dictionary<string, string>() { { "ArgumentName", "email" } });
+            if ((await _authRepository.FindUsersByEmail(user.Email)).Any())
+                return WPResponse.CreateArgumentInvalidResponse("email");
 
-            else if (!validLangs.Contains(user.Language))
-                return new Response(ReturnCode.INVALID_ARGUMENT,
-                                    new Dictionary<string, string>() { { "ArgumentName", "language" } });
+            if (!validLangs.Contains(user.Language))
+                return WPResponse.CreateArgumentInvalidResponse("language");
 
-            // success
-            else
-                await _authRepository.CreateUser(user);
-
-            // log in
+            await _authRepository.CreateUser(user);
             return await Login(new Credentials { Email = user.Email, PasswordHash = passwordRaw });
+            // Shall it log in by default? If not use this line
+            //return WPResponse.Create(ReturnCode.SUCCESS);
         }
 
         [HttpPost("logout")]
-        public async Task<Response> Logout(String token)
+        public async Task<IActionResult> Logout(String token)
         {
             //find user from credentials
             List<Session> foundSessions = await _authRepository.FindSessionsByToken(token);
 
-            //if session not found return error
-            if (foundSessions.Count == 0)
+            if (await _authRepository.SessionValid(token))
             {
-                return new Response(ReturnCode.INVALID_SESSION_TOKEN, null);
+                var sessions = await _authRepository.FindSessionsByToken(token);
+                foreach (var s in sessions)
+                    await _authRepository.TerminateSession(s);
+
+                return WPResponse.Create(ReturnCode.SUCCESS);
             }
-
-            //delete all found sessions
-            foreach (Session session in foundSessions)
+            else
             {
-                await _authRepository.InvalidateSession(session);
-            }
-
-            var r = new Response();
-            return r;
-        }
-
-        private static string ComputeSHA256Hash(string rawData)
-        {
-            using (SHA256 sha256Hash = SHA256.Create())
-            {
-                // ComputeHash - returns byte array  
-                byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(rawData));
-
-                // Convert byte array to a string   
-                StringBuilder builder = new();
-                for (int i = 0; i < bytes.Length; i++)
-                {
-                    builder.Append(bytes[i].ToString("x2"));
-                }
-                return builder.ToString();
+                return WPResponse.CreateArgumentInvalidResponse("token");
             }
         }
     }

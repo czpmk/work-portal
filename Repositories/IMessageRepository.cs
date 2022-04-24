@@ -13,7 +13,6 @@ namespace WorkPortalAPI.Repositories
         Task<IEnumerable<Message>> GetFromChatSince(int chatId, string lastMessageUUID);
         Task<Message> Create(Message message);
         Task Update(Message message);
-        Task Delete(int id);
-        Task Delete(string messageUUID);
+        Task Delete(string UUID);
     }
 }

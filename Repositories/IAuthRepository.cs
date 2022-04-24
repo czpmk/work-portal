@@ -13,5 +13,6 @@ namespace WorkPortalAPI.Repositories
         Task<List<Session>> FindSessionsByToken(string _token);
         Task<string> CreateSession(int _userID);
         Task<Session> InvalidateSession(Session session);
+        Task<Boolean> SessionValid(string token);
     }
 }

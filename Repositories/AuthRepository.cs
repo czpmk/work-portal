@@ -57,5 +57,29 @@ namespace WorkPortalAPI.Repositories
             await _context.SaveChangesAsync();
             return user;
         }
+
+        public async Task<Boolean> SessionValid(string token)
+        {
+            var sessions = await _context.Sessions.Where(s => s.Token == token).ToListAsync();
+            if (sessions.Any())
+            {
+                // multiple sessions with the same token, or session expired
+                if (sessions.Count() != 1 || sessions.First().ExpiryTime < DateTime.Now)
+                {
+                    _context.Remove(token);
+                    return false;
+                }
+                // session valid OK
+                else
+                {
+                    return true;
+                }
+            }
+            // session with the token given not found
+            else
+            {
+                return false;
+            }
+        }
     }
 }

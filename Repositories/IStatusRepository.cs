@@ -13,5 +13,6 @@ namespace WorkPortalAPI.Repositories
         Task<Status> Create(Status status);
         Task Update(Status status);
         Task Delete(int id);
+        Task Delete(string token);
     }
 }

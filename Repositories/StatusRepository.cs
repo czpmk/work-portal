@@ -28,6 +28,13 @@ namespace WorkPortalAPI.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task Delete(string token)
+        {
+            var status = await _context.Statuses.FindAsync(token);
+            _context.Statuses.Remove(status);
+            await _context.SaveChangesAsync();
+        }
+
         public async Task<IEnumerable<Status>> Get()
         {
             return await _context.Statuses.ToListAsync();

@@ -40,6 +40,7 @@ namespace WorkPortalAPI
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IAuthRepository, AuthRepository>();
             services.AddScoped<IVacationRepository, VacationRepository>();
+            services.AddScoped<IMessageRepository, MessageRepository>();
 
             services.AddDbContext<WPContext>(o => o.UseSqlServer(Configuration.GetConnectionString("WPConnection")));
 

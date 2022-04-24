@@ -8,11 +8,13 @@ namespace WorkPortalAPI.Repositories
 {
     public interface IMessageRepository
     {
+        Task<Message> Get(string UUID);
         Task<IEnumerable<Message>> GetAll();
         Task<IEnumerable<Message>> GetAllFromChat(int chatId);
         Task<IEnumerable<Message>> GetFromChatSince(int chatId, string lastMessageUUID);
         Task<Message> Create(Message message);
         Task Update(Message message);
         Task Delete(string UUID);
+        Task<Boolean> Exists(string UUID);
     }
 }

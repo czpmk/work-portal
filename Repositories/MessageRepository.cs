@@ -15,6 +15,11 @@ namespace WorkPortalAPI.Repositories
         {
             this._context = context;
         }
+
+        public async Task<Message> Get(string UUID)
+        {
+            return await _context.Messages.FindAsync(UUID);
+        }
         public async Task<Message> Create(Message message)
         {
             _context.Messages.Add(message);
@@ -30,6 +35,11 @@ namespace WorkPortalAPI.Repositories
                 _context.Messages.Remove(message);
                 await _context.SaveChangesAsync();
             }
+        }
+
+        public async Task<Boolean> Exists(string UUID)
+        {
+            return await _context.Messages.AnyAsync(m => m.UUID == UUID);
         }
 
         // Get all messages

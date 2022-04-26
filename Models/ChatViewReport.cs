@@ -13,7 +13,7 @@ namespace WorkPortalAPI.Models
         NEW_MESSAGES_AWAITING = 1
     }
 
-    [Table("chat_view_report")]
+    [Table("chat_view_reports")]
     public class ChatViewReport
     {
         [Column("id")]

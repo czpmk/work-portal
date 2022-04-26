@@ -18,11 +18,15 @@ namespace WorkPortalAPI.Controllers
     {
         private readonly IAuthRepository _authRepository;
         private readonly IMessageRepository _messageRepository;
+        private readonly IChatRepository _chatRepository;
+        private readonly IChatViewReportRepository _chatViewReportRepository;
 
-        public MessageController(IMessageRepository messageRepository, IAuthRepository authRepository)
+        public MessageController(IMessageRepository messageRepository, IAuthRepository authRepository, IChatRepository chatRepository, IChatViewReportRepository chatViewReportRepository)
         {
             this._authRepository = authRepository;
             this._messageRepository = messageRepository;
+            this._chatRepository = chatRepository;
+            this._chatViewReportRepository = chatViewReportRepository;
         }
 
         [HttpGet("all")]
@@ -47,7 +51,7 @@ namespace WorkPortalAPI.Controllers
         [HttpPost("add")]
         public async Task<IActionResult> AddMessage(Message message, String token)
         {
-            var newUserId = Utils.NewUUID();
+            var newMessageId = Utils.NewUUID();
 
             if (!(await _authRepository.SessionValid(token)))
             {
@@ -55,7 +59,20 @@ namespace WorkPortalAPI.Controllers
                 return WPResponse.Create(ReturnCode.AUTHENTICATION_INVALID);
             }
 
-            _messageRepository.Create(message);
+            var postingUser = await _authRepository.FindUserByToken(token);
+            // remove ?? user Id is being sorted out out of session token anyway
+            //if (postingUser.Id != message.UserId)
+            //    return WPResponse.CreateArgumentInvalidResponse("UserId");
+
+            if (!(await _chatViewReportRepository.Exists(message.UserId, message.ChatId)))
+                return WPResponse.CreateAccessDeniedResponse("Chat");
+
+            if (!(await _chatRepository.Exists(message.ChatId)))
+                return WPResponse.CreateArgumentInvalidResponse("ChatId");
+
+            message.UserId = postingUser.Id;
+            message.UUID = newMessageId;
+            await _messageRepository.Create(message);
 
             return WPResponse.Create();
         }

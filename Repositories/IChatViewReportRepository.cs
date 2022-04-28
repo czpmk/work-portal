@@ -11,6 +11,7 @@ namespace WorkPortalAPI.Repositories
         Task<ChatViewReport> Get(int id);
         Task<IEnumerable<ChatViewReport>> GetReportsForUser(int userId);
         Task<ChatViewReport> Create(ChatViewReport chatViewReport);
+        Task<ChatViewReport> Create(int userId, int chatId);
         Task Update(ChatViewReport chatViewReport);
         Task Delete(int id);
         Task<Boolean> Exists(int id);

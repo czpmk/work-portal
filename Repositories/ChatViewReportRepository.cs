@@ -21,6 +21,18 @@ namespace WorkPortalAPI.Repositories
             return chatViewReport;
         }
 
+        public async Task<ChatViewReport> Create(int userId, int chatId)
+        {
+            var chatViewReport = new ChatViewReport()
+            {
+                UserId = userId,
+                ChatId = chatId,
+                MessageUUID = null
+            };
+
+            return await Create(chatViewReport);
+        }
+
         public async Task Delete(int id)
         {
             var chatViewReport = await _context.ChatViewReports.FindAsync(id);

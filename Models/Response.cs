@@ -20,7 +20,9 @@ namespace WorkPortalAPI.Models
         ARGUMENT_ALREADY_EXISTS = 463,
         ARGUMENT_DOES_NOT_EXIST = 464,
         // user does not have access to the item; returns "item_name" to which access has been denied
-        ACCESS_DENIED = 465
+        ACCESS_DENIED = 465,
+        // action not allowed in a context, e.g. adding user to private chat, returns operation
+        OPERATION_NOT_ALLOWED = 466
     }
 
     public static class WPResponse
@@ -59,6 +61,21 @@ namespace WorkPortalAPI.Models
         public static IActionResult CreateAccessDeniedResponse(string itemName)
         {
             return Create("item_name", itemName, ReturnCode.ACCESS_DENIED);
+        }
+
+        public static IActionResult CreateArgumentAlreadyExists(string argumentName)
+        {
+            return Create("argument_name", argumentName, ReturnCode.ARGUMENT_ALREADY_EXISTS);
+        }
+
+        public static IActionResult CreateArgumentDoesNotExist(string argumentName)
+        {
+            return Create("argument_name", argumentName, ReturnCode.ARGUMENT_DOES_NOT_EXIST);
+        }
+
+        public static IActionResult CreateOperationNotAllowed(string invalidOpertaion)
+        {
+            return Create("invalid_operation", invalidOpertaion, ReturnCode.OPERATION_NOT_ALLOWED);
         }
 
         public static string ReturnCodeToString(ReturnCode returnCode)

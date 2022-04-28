@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +7,8 @@ using System.Threading.Tasks;
 using WorkPortalAPI.Repositories;
 using WorkPortalAPI.Models;
 using System.ComponentModel.DataAnnotations;
+using System.Text;
+using System.Security.Cryptography;
 
 namespace WorkPortalAPI.Controllers
 {
@@ -38,6 +39,44 @@ namespace WorkPortalAPI.Controllers
 
             var messages = await _chatRepository.GetMessages(chatId);
             return WPResponse.Create(messages);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Create(Chat chat, string token)
+        {
+            // TODO: check if action legal (user can view the messages)
+
+            if (await _chatRepository.Exists(chat))
+                return WPResponse.CreateArgumentAlreadyExists("Chat");
+
+            if (!_chatRepository.IsGroupChat(chat) && !_chatRepository.IsPrivateChat(chat))
+                return WPResponse.CreateArgumentInvalidResponse("Chat");
+
+            var newChat = await _chatRepository.Create(chat);
+            if (_chatRepository.IsPrivateChat(newChat))
+            {
+                await _chatViewReportRepository.Create(chat.FirstUserId.GetValueOrDefault(), chat.Id);
+                await _chatViewReportRepository.Create(chat.SecondUserId.GetValueOrDefault(), chat.Id);
+            }
+
+            return WPResponse.Create(newChat);
+        }
+
+        [HttpPost("addUserToChat")]
+        public async Task<IActionResult> AddUserToChat(int chatId, int userId, string token)
+        {
+            // TODO: check if action legal (user can view the messages)
+
+            if (!(await _chatRepository.Exists(chatId)))
+                return WPResponse.CreateArgumentDoesNotExist("Chat");
+
+            if (await _chatRepository.IsPrivateChat(chatId))
+                return WPResponse.CreateOperationNotAllowed("Adding user manually to the private chat not allowed.");
+
+            var user = await _authRepository.FindUserByToken(token);
+
+            var chatViewReport = await _chatViewReportRepository.Create(userId, chatId);
+            return WPResponse.Create(chatViewReport);
         }
 
         [HttpGet("{nMessages}")]

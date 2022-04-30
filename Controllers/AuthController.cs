@@ -28,7 +28,7 @@ namespace WorkPortalAPI.Controllers
         public async Task<IActionResult> Login(Credentials credentials)
         {
             //find user from credentials
-            List<User> foundUsers = await _authRepository.FindUsersByEmail(credentials.Email);
+            List<User> foundUsers = await _authRepository.GetUsersByEmail(credentials.Email);
 
             //if more than one user found
             if (foundUsers.Count > 1)
@@ -64,7 +64,7 @@ namespace WorkPortalAPI.Controllers
             if (!new EmailAddressAttribute().IsValid(user.Email))
                 return WPResponse.CreateArgumentInvalidResponse("email");
 
-            if ((await _authRepository.FindUsersByEmail(user.Email)).Any())
+            if ((await _authRepository.GetUsersByEmail(user.Email)).Any())
                 return WPResponse.CreateArgumentInvalidResponse("email");
 
             if (!validLangs.Contains(user.Language))
@@ -80,11 +80,11 @@ namespace WorkPortalAPI.Controllers
         public async Task<IActionResult> Logout(String token)
         {
             //find user from credentials
-            List<Session> foundSessions = await _authRepository.FindSessionsByToken(token);
+            List<Session> foundSessions = await _authRepository.GetSessionsByToken(token);
 
             if (await _authRepository.SessionValid(token))
             {
-                var sessions = await _authRepository.FindSessionsByToken(token);
+                var sessions = await _authRepository.GetSessionsByToken(token);
                 foreach (var s in sessions)
                     await _authRepository.TerminateSession(s);
 

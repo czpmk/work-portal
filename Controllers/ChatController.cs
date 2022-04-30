@@ -17,17 +17,62 @@ namespace WorkPortalAPI.Controllers
     public class ChatController
     {
         private readonly IAuthRepository _authRepository;
+        private readonly IUserRepository _userRepository;
         private readonly IChatRepository _chatRepository;
         private readonly IMessageRepository _messageRepository;
         private readonly IChatViewReportRepository _chatViewReportRepository;
+        private readonly IRoleRepository _roleRepository;
 
-        public ChatController(IAuthRepository authRepository, IChatRepository chatRepository, IMessageRepository messageRepository, IChatViewReportRepository chatViewReportRepository)
+
+        public ChatController(IAuthRepository authRepository, IUserRepository userRepository, IChatRepository chatRepository, IMessageRepository messageRepository, IChatViewReportRepository chatViewReportRepository, IRoleRepository roleRepository)
         {
             this._authRepository = authRepository;
+            this._userRepository = userRepository;
             this._chatRepository = chatRepository;
             this._messageRepository = messageRepository;
             this._chatViewReportRepository = chatViewReportRepository;
+            this._roleRepository = roleRepository;
         }
+
+        [HttpPost("createPrivateChat")]
+        public async Task<IActionResult> Create(Chat chat, string token)
+        {
+            if (!(await _authRepository.SessionValid(token)))
+                return WPResponse.CreateAuthenticationInvalid();
+
+            var user = _authRepository.GetUserByToken(token);
+            var role = _roleRepository.Get(user.Id);
+
+            if (await _chatRepository.Exists(chat))
+                return WPResponse.CreateArgumentAlreadyExists("Chat");
+
+            // only Private Chat can be created via this method
+            if (!_chatRepository.IsPrivateChat(chat))
+                return WPResponse.CreateArgumentInvalidResponse("Chat");
+
+            // Chat can be created only by a user taking part in it
+            if (chat.FirstUserId != user.Id && chat.SecondUserId != user.Id)
+                return WPResponse.CreateOperationNotAllowed("Creating chat by a user not taking part in it");
+
+            // One of the user ids does not exist
+            if (!(await _userRepository.Exists(chat.FirstUserId.GetValueOrDefault())) ||
+                !(await _userRepository.Exists(chat.SecondUserId.GetValueOrDefault())))
+                return WPResponse.CreateArgumentDoesNotExist("UserId");
+
+            // Same user id
+            if (chat.FirstUserId == chat.SecondUserId)
+                return WPResponse.CreateOperationNotAllowed("Chat member Id's cannot be identical");
+
+            var newChat = await _chatRepository.Create(chat);
+            // CREATE CHAT VIEW REPORT - CRUCIAL!!!
+            await _chatViewReportRepository.Create(chat.FirstUserId.GetValueOrDefault(), chat.Id);
+            await _chatViewReportRepository.Create(chat.SecondUserId.GetValueOrDefault(), chat.Id);
+
+            return WPResponse.Create(newChat);
+        }
+
+
+        // DEBUG METHODS .........................................................
 
         [HttpGet]
         public async Task<IActionResult> GetAllMessages(int chatId, string token)
@@ -41,27 +86,6 @@ namespace WorkPortalAPI.Controllers
             return WPResponse.Create(messages);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Create(Chat chat, string token)
-        {
-            // TODO: check if action legal (user can view the messages)
-
-            if (await _chatRepository.Exists(chat))
-                return WPResponse.CreateArgumentAlreadyExists("Chat");
-
-            if (!_chatRepository.IsGroupChat(chat) && !_chatRepository.IsPrivateChat(chat))
-                return WPResponse.CreateArgumentInvalidResponse("Chat");
-
-            var newChat = await _chatRepository.Create(chat);
-            if (_chatRepository.IsPrivateChat(newChat))
-            {
-                await _chatViewReportRepository.Create(chat.FirstUserId.GetValueOrDefault(), chat.Id);
-                await _chatViewReportRepository.Create(chat.SecondUserId.GetValueOrDefault(), chat.Id);
-            }
-
-            return WPResponse.Create(newChat);
-        }
-
         [HttpPost("addUserToChat")]
         public async Task<IActionResult> AddUserToChat(int chatId, int userId, string token)
         {
@@ -73,7 +97,7 @@ namespace WorkPortalAPI.Controllers
             if (await _chatRepository.IsPrivateChat(chatId))
                 return WPResponse.CreateOperationNotAllowed("Adding user manually to the private chat not allowed.");
 
-            var user = await _authRepository.FindUserByToken(token);
+            var user = await _authRepository.GetUserByToken(token);
 
             var chatViewReport = await _chatViewReportRepository.Create(userId, chatId);
             return WPResponse.Create(chatViewReport);
@@ -129,7 +153,7 @@ namespace WorkPortalAPI.Controllers
         {
             // TODO: check if action legal (user can view the messages)
 
-            var requestingUser = await _authRepository.FindUserByToken(token);
+            var requestingUser = await _authRepository.GetUserByToken(token);
             if (requestingUser == null)
                 return WPResponse.CreateArgumentInvalidResponse("token");
 

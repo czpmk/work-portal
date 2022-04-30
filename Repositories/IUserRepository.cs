@@ -13,5 +13,6 @@ namespace WorkPortalAPI.Repositories
         Task<User> Create(User user);
         Task Update(User user);
         Task Delete(int id);
+        Task<Boolean> Exists(int id);
     }
 }

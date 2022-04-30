@@ -14,6 +14,8 @@ namespace WorkPortalAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+
+    // for DEBUG ONLY, TODO: remove
     public class MessageController : ControllerBase
     {
         private readonly IAuthRepository _authRepository;
@@ -59,7 +61,7 @@ namespace WorkPortalAPI.Controllers
                 return WPResponse.Create(ReturnCode.AUTHENTICATION_INVALID);
             }
 
-            var postingUser = await _authRepository.FindUserByToken(token);
+            var postingUser = await _authRepository.GetUserByToken(token);
             // remove ?? user Id is being sorted out out of session token anyway
             //if (postingUser.Id != message.UserId)
             //    return WPResponse.CreateArgumentInvalidResponse("UserId");

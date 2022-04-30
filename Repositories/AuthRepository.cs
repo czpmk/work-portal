@@ -32,13 +32,13 @@ namespace WorkPortalAPI.Repositories
         }
 
         //TODO: Move to UserRepository?
-        public async Task<List<User>> FindUsersByEmail(string _email)
+        public async Task<List<User>> GetUsersByEmail(string _email)
         {
             var query = from user in _context.Users where user.Email.Equals(_email) select user;
             return await query.ToListAsync();
         }
 
-        public async Task<List<Session>> FindSessionsByToken(string _token)
+        public async Task<List<Session>> GetSessionsByToken(string _token)
         {
             var query = from session in _context.Sessions where session.Token.Equals(_token) select session;
             return await query.ToListAsync();
@@ -53,7 +53,7 @@ namespace WorkPortalAPI.Repositories
 
         public async Task<string> TerminateSession(string token)
         {
-            var sessions = await FindSessionsByToken(token);
+            var sessions = await GetSessionsByToken(token);
             foreach (var s in sessions)
                 await TerminateSession(s);
             return token;
@@ -82,12 +82,12 @@ namespace WorkPortalAPI.Repositories
             }
         }
 
-        public async Task<User> FindUserByToken(string token)
+        public async Task<User> GetUserByToken(string token)
         {
             if (!(await SessionValid(token)))
                 return null;
 
-            var session = (await FindSessionsByToken(token)).FirstOrDefault();
+            var session = (await GetSessionsByToken(token)).FirstOrDefault();
             if (session == null)
                 return null;
             return await _context.Users.FindAsync(session.UserId);

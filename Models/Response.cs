@@ -63,6 +63,11 @@ namespace WorkPortalAPI.Models
             return Create("item_name", itemName, ReturnCode.ACCESS_DENIED);
         }
 
+        public static IActionResult CreateAuthenticationInvalid()
+        {
+            return Create(ReturnCode.AUTHENTICATION_INVALID);
+        }
+
         public static IActionResult CreateArgumentAlreadyExists(string argumentName)
         {
             return Create("argument_name", argumentName, ReturnCode.ARGUMENT_ALREADY_EXISTS);

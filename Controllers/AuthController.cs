@@ -32,20 +32,20 @@ namespace WorkPortalAPI.Controllers
 
             //if more than one user found
             if (foundUsers.Count > 1)
-                return WPResponse.Create(ReturnCode.INTERNAL_ERROR);
+                return WPResponse.Custom(ReturnCode.INTERNAL_ERROR);
 
             //if user not found
             if (foundUsers.Count != 1)
-                return WPResponse.Create(ReturnCode.AUTHENTICATION_INVALID);
+                return WPResponse.Custom(ReturnCode.AUTHENTICATION_INVALID);
 
             User user = foundUsers.First();
             //if password is invalid return error
             if (Utils.GetSHA256HashOf(user.Salt + credentials.PasswordHash) != user.Password)
-                return WPResponse.Create(ReturnCode.AUTHENTICATION_INVALID);
+                return WPResponse.Custom(ReturnCode.AUTHENTICATION_INVALID);
 
             // all ok
             string token = await _authRepository.CreateSession(user.Id);
-            return WPResponse.Create(token);
+            return WPResponse.Custom(token);
         }
 
         [HttpPost("register")]
@@ -62,13 +62,13 @@ namespace WorkPortalAPI.Controllers
 
             // validate
             if (!new EmailAddressAttribute().IsValid(user.Email))
-                return WPResponse.CreateArgumentInvalidResponse("email");
+                return WPResponse.ArgumentInvalid("email");
 
             if ((await _authRepository.GetUsersByEmail(user.Email)).Any())
-                return WPResponse.CreateArgumentInvalidResponse("email");
+                return WPResponse.ArgumentInvalid("email");
 
             if (!validLangs.Contains(user.Language))
-                return WPResponse.CreateArgumentInvalidResponse("language");
+                return WPResponse.ArgumentInvalid("language");
 
             await _authRepository.CreateUser(user);
             return await Login(new Credentials { Email = user.Email, PasswordHash = passwordRaw });
@@ -88,11 +88,11 @@ namespace WorkPortalAPI.Controllers
                 foreach (var s in sessions)
                     await _authRepository.TerminateSession(s);
 
-                return WPResponse.Create(ReturnCode.SUCCESS);
+                return WPResponse.Custom(ReturnCode.SUCCESS);
             }
             else
             {
-                return WPResponse.CreateArgumentInvalidResponse("token");
+                return WPResponse.ArgumentInvalid("token");
             }
         }
     }

@@ -38,6 +38,11 @@ namespace WorkPortalAPI.Repositories
             return await _context.Roles.FindAsync(id);
         }
 
+        public async Task<Role> GetByUserId(int userId)
+        {
+            return await _context.Roles.Where(r => r.UserId == userId).FirstOrDefaultAsync();
+        }
+
         public async Task Update(Role role)
         {
             _context.Entry(role).State = EntityState.Modified;

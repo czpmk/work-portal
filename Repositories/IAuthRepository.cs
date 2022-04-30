@@ -12,6 +12,7 @@ namespace WorkPortalAPI.Repositories
         Task<List<User>> GetUsersByEmail(string email);
         Task<List<Session>> GetSessionsByToken(string _token);
         Task<User> GetUserByToken(string token);
+        Task<Role> GetUserRoleByToken(string token);
         Task<string> CreateSession(int _userID);
         Task<Session> TerminateSession(Session session);
         Task<string> TerminateSession(string token);

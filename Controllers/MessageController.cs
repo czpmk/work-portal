@@ -58,7 +58,7 @@ namespace WorkPortalAPI.Controllers
             if (!(await _authRepository.SessionValid(token)))
             {
                 await _authRepository.TerminateSession(token);
-                return WPResponse.Create(ReturnCode.AUTHENTICATION_INVALID);
+                return WPResponse.Custom(ReturnCode.AUTHENTICATION_INVALID);
             }
 
             var postingUser = await _authRepository.GetUserByToken(token);
@@ -67,16 +67,16 @@ namespace WorkPortalAPI.Controllers
             //    return WPResponse.CreateArgumentInvalidResponse("UserId");
 
             if (!(await _chatViewReportRepository.Exists(message.UserId, message.ChatId)))
-                return WPResponse.CreateAccessDeniedResponse("Chat");
+                return WPResponse.AccessDenied("Chat");
 
             if (!(await _chatRepository.Exists(message.ChatId)))
-                return WPResponse.CreateArgumentInvalidResponse("ChatId");
+                return WPResponse.ArgumentInvalid("ChatId");
 
             message.UserId = postingUser.Id;
             message.UUID = newMessageId;
             await _messageRepository.Create(message);
 
-            return WPResponse.Create();
+            return WPResponse.Custom();
         }
     }
 }

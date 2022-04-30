@@ -9,11 +9,12 @@ namespace WorkPortalAPI.Repositories
     public interface IChatRepository
     {
         Task<List<Chat>> GetGroupChats();
-        Task<List<Chat>> GetGroupChats(int companyId);
-        Task<List<Chat>> GetGroupChats(int companyId, int departamentId);
+        Task<Chat> GetCompanyChat(int companyId);
+        Task<List<Chat>> GetDepartamentChats(int companyId);
+        Task<Chat> GetDepartamentChat(int companyId, int departamentId);
         Task<List<Chat>> GetPrivateChats();
         Task<List<Chat>> GetPrivateChats(int userId);
-        Task<List<Chat>> GetPrivateChats(int firstUserId, int secondUserId);
+        Task<Chat> GetPrivateChat(int firstUserId, int secondUserId);
         Task<Message> GetLastMessage(int chatId);
         Task<List<Message>> GetMessages(int chatId, int n = 50);
         Task<List<Message>> GetMessagesSince(int chatId, DateTime timestamp);

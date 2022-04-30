@@ -14,5 +14,7 @@ namespace WorkPortalAPI.Repositories
         Task<Departament> Create(Departament departament);
         Task Update(Departament departament);
         Task Delete(int id);
+        Task<Boolean> Exists(int id);
+        Task<Boolean> Exists(Departament departament);
     }
 }

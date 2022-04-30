@@ -27,7 +27,7 @@ namespace WorkPortalAPI.Models
 
     public static class WPResponse
     {
-        public static IActionResult Create(object result, ReturnCode returnCode = ReturnCode.SUCCESS)
+        public static IActionResult Custom(object result, ReturnCode returnCode = ReturnCode.SUCCESS)
         {
             var objRes = new ObjectResult(new Dictionary<string, object> {
                 { "reason", ReturnCodeToString(returnCode) },
@@ -37,7 +37,7 @@ namespace WorkPortalAPI.Models
             return objRes;
         }
 
-        public static IActionResult Create(object key, object value, ReturnCode returnCode = ReturnCode.SUCCESS)
+        public static IActionResult Custom(object key, object value, ReturnCode returnCode = ReturnCode.SUCCESS)
         {
             var objRes = new ObjectResult(new Dictionary<object, object> {
                 { "reason", ReturnCodeToString(returnCode) },
@@ -48,42 +48,42 @@ namespace WorkPortalAPI.Models
             return objRes;
         }
 
-        public static IActionResult Create(ReturnCode returnCode = ReturnCode.SUCCESS)
+        public static IActionResult Custom(ReturnCode returnCode = ReturnCode.SUCCESS)
         {
-            return Create(null, returnCode);
+            return Custom(null, returnCode);
         }
 
-        public static IActionResult CreateArgumentInvalidResponse(string argumentName)
+        public static IActionResult ArgumentInvalid(string argumentName)
         {
-            return Create("argument_name", argumentName, ReturnCode.INVALID_ARGUMENT);
+            return Custom("argument_name", argumentName, ReturnCode.INVALID_ARGUMENT);
         }
 
-        public static IActionResult CreateAccessDeniedResponse(string itemName)
+        public static IActionResult AccessDenied(string itemName)
         {
-            return Create("item_name", itemName, ReturnCode.ACCESS_DENIED);
+            return Custom("item_name", itemName, ReturnCode.ACCESS_DENIED);
         }
 
-        public static IActionResult CreateAuthenticationInvalid()
+        public static IActionResult AuthenticationInvalid()
         {
-            return Create(ReturnCode.AUTHENTICATION_INVALID);
+            return Custom(ReturnCode.AUTHENTICATION_INVALID);
         }
 
-        public static IActionResult CreateArgumentAlreadyExists(string argumentName)
+        public static IActionResult ArgumentAlreadyExists(string argumentName)
         {
-            return Create("argument_name", argumentName, ReturnCode.ARGUMENT_ALREADY_EXISTS);
+            return Custom("argument_name", argumentName, ReturnCode.ARGUMENT_ALREADY_EXISTS);
         }
 
-        public static IActionResult CreateArgumentDoesNotExist(string argumentName)
+        public static IActionResult ArgumentDoesNotExist(string argumentName)
         {
-            return Create("argument_name", argumentName, ReturnCode.ARGUMENT_DOES_NOT_EXIST);
+            return Custom("argument_name", argumentName, ReturnCode.ARGUMENT_DOES_NOT_EXIST);
         }
 
-        public static IActionResult CreateOperationNotAllowed(string invalidOpertaion)
+        public static IActionResult OperationNotAllowed(string invalidOpertaion)
         {
-            return Create("invalid_operation", invalidOpertaion, ReturnCode.OPERATION_NOT_ALLOWED);
+            return Custom("invalid_operation", invalidOpertaion, ReturnCode.OPERATION_NOT_ALLOWED);
         }
 
-        public static string ReturnCodeToString(ReturnCode returnCode)
+        private static string ReturnCodeToString(ReturnCode returnCode)
         {
             return Enum.GetName(typeof(ReturnCode), returnCode);
         }

@@ -35,14 +35,14 @@ namespace WorkPortalAPI.Repositories
         {
             List<Chat> chatList = new List<Chat>();
             if (chat.FirstUserId != null && chat.SecondUserId != null)
-                chatList.AddRange(await GetPrivateChats(chat.FirstUserId.GetValueOrDefault(),
+                chatList.Add(await GetPrivateChat(chat.FirstUserId.GetValueOrDefault(),
                                     chat.SecondUserId.GetValueOrDefault()));
 
             else if (chat.CompanyId != null && chat.DepartamentId == null)
-                chatList.AddRange(await GetGroupChats(chat.CompanyId.GetValueOrDefault()));
+                chatList.Add(await GetCompanyChat(chat.CompanyId.GetValueOrDefault()));
 
             else if (chat.CompanyId != null && chat.DepartamentId != null)
-                chatList.AddRange(await GetGroupChats(chat.CompanyId.GetValueOrDefault(),
+                chatList.Add(await GetDepartamentChat(chat.CompanyId.GetValueOrDefault(),
                                     chat.DepartamentId.GetValueOrDefault()));
 
             return chatList.Any();
@@ -50,8 +50,17 @@ namespace WorkPortalAPI.Repositories
 
         public async Task Delete(int id)
         {
+            var chatViewReports = await _context.ChatViewReports.Where(c => c.ChatId == id).ToListAsync();
+            foreach (var c in chatViewReports)
+                _context.ChatViewReports.Remove(c);
+
+            var messages = await _context.Messages.Where(m => m.ChatId == id).ToListAsync();
+            foreach (var m in messages)
+                _context.Messages.Remove(m);
+
             var chat = await _context.Chats.FindAsync(id);
             _context.Chats.Remove(chat);
+
             await _context.SaveChangesAsync();
         }
 
@@ -60,7 +69,16 @@ namespace WorkPortalAPI.Repositories
             return await _context.Chats.Where(c => c.FirstUserId == null && c.SecondUserId == null).ToListAsync();
         }
 
-        public async Task<List<Chat>> GetGroupChats(int companyId)
+        public async Task<Chat> GetCompanyChat(int companyId)
+        {
+            return await _context.Chats.Where(c => c.FirstUserId == null &&
+                                                c.SecondUserId == null &&
+                                                c.CompanyId == companyId &&
+                                                c.DepartamentId == null
+                                                ).FirstOrDefaultAsync();
+        }
+
+        public async Task<List<Chat>> GetDepartamentChats(int companyId)
         {
             return await _context.Chats.Where(c => c.FirstUserId == null &&
                                                 c.SecondUserId == null &&
@@ -68,13 +86,13 @@ namespace WorkPortalAPI.Repositories
                                                 ).ToListAsync();
         }
 
-        public async Task<List<Chat>> GetGroupChats(int companyId, int departamentId)
+        public async Task<Chat> GetDepartamentChat(int companyId, int departamentId)
         {
             return await _context.Chats.Where(c => c.FirstUserId == null &&
                                                 c.SecondUserId == null &&
                                                 c.CompanyId == companyId &&
                                                 c.DepartamentId == departamentId
-                                                ).ToListAsync();
+                                                ).FirstOrDefaultAsync();
         }
         public async Task<Message> GetLastMessage(int chatId)
         {
@@ -122,11 +140,11 @@ namespace WorkPortalAPI.Repositories
             return await _context.Chats.Where(c => c.FirstUserId == userId || c.SecondUserId == userId).ToListAsync();
         }
 
-        public async Task<List<Chat>> GetPrivateChats(int firstUserId, int secondUserId)
+        public async Task<Chat> GetPrivateChat(int firstUserId, int secondUserId)
         {
             return await _context.Chats.Where(c => (firstUserId == c.FirstUserId || firstUserId == c.SecondUserId) &&
                                                    (secondUserId == c.FirstUserId || secondUserId == c.SecondUserId)
-                                                   ).ToListAsync();
+                                                   ).FirstOrDefaultAsync();
         }
 
         public async Task Update(Chat chat)

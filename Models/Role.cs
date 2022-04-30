@@ -7,8 +7,9 @@ using System.Threading.Tasks;
 namespace WorkPortalAPI.Models
 {
     public enum RoleType {
-        User = 1,
-        Administrator = 2
+        COMPANY_OWNER = 1,
+        HEAD_OF_DEPARTAMENT = 2,
+        USER = 3
     }
 
     [Table("roles")]

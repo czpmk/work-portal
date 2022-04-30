@@ -13,5 +13,7 @@ namespace WorkPortalAPI.Repositories
         Task<Company> Create(Company company);
         Task Update(Company company);
         Task Delete(int id);
+        Task<Boolean> Exists(int id);
+        Task<Boolean> Exists(Company company);
     }
 }

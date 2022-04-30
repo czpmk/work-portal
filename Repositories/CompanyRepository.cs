@@ -44,5 +44,15 @@ namespace WorkPortalAPI.Repositories
             _context.Entry(company).State = EntityState.Modified;
             await _context.SaveChangesAsync();
         }
+
+        public async Task<Boolean> Exists(int id)
+        {
+            return await _context.Companies.Where(c => c.Id == id).AnyAsync();
+        }
+
+        public async Task<Boolean> Exists(Company company)
+        {
+            return await _context.Companies.Where(c => c.Name == company.Name).AnyAsync();
+        }
     }
 }

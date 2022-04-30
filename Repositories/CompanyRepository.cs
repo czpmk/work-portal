@@ -54,5 +54,39 @@ namespace WorkPortalAPI.Repositories
         {
             return await _context.Companies.Where(c => c.Name == company.Name).AnyAsync();
         }
+
+        public async Task<User> GetOwner(Company company)
+        {
+            var role = await _context.Roles.Where(r => r.Type == RoleType.COMPANY_OWNER &&
+                                                   r.CompanyId == company.Id).FirstOrDefaultAsync();
+            if (role == null)
+                return null;
+            else
+                return await _context.Users.FindAsync(role.UserId);
+        }
+        public async Task<User> RetractOwnership(User user)
+        {
+            var role = await _context.Roles.Where(r => r.UserId == user.Id).FirstOrDefaultAsync();
+            if (role != null)
+            {
+                role.Type = RoleType.USER;
+                _context.Entry(role).State = EntityState.Modified;
+                await _context.SaveChangesAsync();
+            }
+            return user;
+        }
+
+        public async Task<User> GrantOwnership(User user, RoleType type, int companyId)
+        {
+            var role = await _context.Roles.Where(r => r.UserId == user.Id).FirstOrDefaultAsync();
+            if (role != null)
+            {
+                role.Type = RoleType.COMPANY_OWNER;
+                role.CompanyId = companyId;
+                _context.Entry(role).State = EntityState.Modified;
+                await _context.SaveChangesAsync();
+            }
+            return user;
+        }
     }
 }

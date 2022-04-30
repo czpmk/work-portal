@@ -17,15 +17,17 @@ namespace WorkPortalAPI.Controllers
         private readonly IAuthRepository _authRepository;
         private readonly IChatRepository _chatRepository;
         private readonly IChatViewReportRepository _chatViewReportRepository;
+        private readonly IUserRepository _userRepository;
 
 
-        public CompanyController(ICompanyRepository companyRepository, IDepartamentRepository departamentRepository, IAuthRepository authRepository, IChatRepository chatRepository, IChatViewReportRepository chatViewReportRepository)
+        public CompanyController(IUserRepository userRepository, ICompanyRepository companyRepository, IDepartamentRepository departamentRepository, IAuthRepository authRepository, IChatRepository chatRepository, IChatViewReportRepository chatViewReportRepository)
         {
             this._companyRepository = companyRepository;
             this._departamentRepository = departamentRepository;
             this._authRepository = authRepository;
             this._chatRepository = chatRepository;
             this._chatViewReportRepository = chatViewReportRepository;
+            this._userRepository = userRepository;
         }
 
         [HttpGet]
@@ -99,6 +101,33 @@ namespace WorkPortalAPI.Controllers
 
             await _companyRepository.Delete(company.Id);
 
+            return WPResponse.Custom();
+        }
+
+        [HttpPut("SetCompanyOwner")]
+        public async Task<IActionResult> SetCompanyOwner(Company company, User newOwner, string token)
+        {
+            if (!(await _authRepository.SessionValid(token)))
+                return WPResponse.AuthenticationInvalid();
+
+            var user = await _authRepository.GetUserByToken(token);
+            if (!user.IsAdmin)
+                return WPResponse.AccessDenied("Company/Create");
+
+            if (!(await _companyRepository.Exists(company)))
+                return WPResponse.ArgumentDoesNotExist("company");
+
+            if (!(await _userRepository.Exists(newOwner.Id)))
+                return WPResponse.ArgumentDoesNotExist("newOwnerId");
+
+            // get old owner
+            var oldOwner = await _companyRepository.GetOwner(company);
+            if (oldOwner != null)
+            {
+                await _companyRepository.RetractOwnership(oldOwner);
+            }
+
+            await _companyRepository.GrantOwnership(user, RoleType.COMPANY_OWNER, company.Id);
             return WPResponse.Custom();
         }
     }

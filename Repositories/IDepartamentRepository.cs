@@ -16,5 +16,8 @@ namespace WorkPortalAPI.Repositories
         Task Delete(int id);
         Task<Boolean> Exists(int id);
         Task<Boolean> Exists(Departament departament);
+        Task<User> GetOwner(Departament departament);
+        Task<User> RetractOwnership(User user);
+        Task<User> GrantOwnership(User user, RoleType type, int departamentId);
     }
 }

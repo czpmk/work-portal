@@ -15,5 +15,8 @@ namespace WorkPortalAPI.Repositories
         Task Delete(int id);
         Task<Boolean> Exists(int id);
         Task<Boolean> Exists(Company company);
+        Task<User> GetOwner(Company company);
+        Task<User> RetractOwnership(User user);
+        Task<User> GrantOwnership(User user, RoleType type, int companyId);
     }
 }

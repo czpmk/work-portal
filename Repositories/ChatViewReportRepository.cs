@@ -70,6 +70,11 @@ namespace WorkPortalAPI.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task<ChatViewReport> GetReportForUser(int chatId, int userId)
+        {
+            return await _context.ChatViewReports.Where(c => c.ChatId == chatId && c.UserId == userId).FirstOrDefaultAsync();
+        }
+
         public async Task<IEnumerable<ChatViewReport>> GetReportsForUser(int userId)
         {
             return await _context.ChatViewReports.Where(c => c.UserId == userId).ToListAsync();

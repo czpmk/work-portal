@@ -115,19 +115,41 @@ namespace WorkPortalAPI.Repositories
             }
         }
 
-        public async Task<List<Message>> GetMessagesSince(int chatId, DateTime timestamp)
+        public async Task<List<Message>> GetMessagesSince(int chatId, string UUID, int n = 50)
         {
-            var messages = await _context.Messages.Where(m => m.ChatId == chatId &&
-                                                              m.Timestamp > timestamp
-                                                         ).ToListAsync();
-            messages.Sort((f, s) => s.Timestamp.CompareTo(f.Timestamp));
-            return messages;
+            var message = await _context.Messages.FindAsync(UUID);
+            var newerMessages = await _context.Messages.Where(m => m.ChatId == chatId && m.Timestamp > message.Timestamp).ToListAsync();
+            // sort desc
+            newerMessages.Sort((f, s) => s.Timestamp.CompareTo(s.Timestamp));
+            if (n >= newerMessages.Count())
+                return newerMessages;
+            else
+                return newerMessages.TakeLast(n).ToList();
         }
 
-        public async Task<List<Message>> GetMessagesSince(int chatId, Message lastMessage)
+        public async Task<List<Message>> GetMessagesUntil(int chatId, string UUID, int n = 50)
         {
-            return await _context.Messages.Where(m => m.ChatId == chatId &&
-                                                      m.Timestamp > lastMessage.Timestamp).ToListAsync();
+            var message = await _context.Messages.FindAsync(UUID);
+            var olderMessages = await _context.Messages.Where(m => m.ChatId == chatId && m.Timestamp < message.Timestamp).ToListAsync();
+            // sort desc
+            olderMessages.Sort((f, s) => s.Timestamp.CompareTo(s.Timestamp));
+            if (n >= olderMessages.Count())
+                return olderMessages;
+            else
+                return olderMessages.Take(n).ToList();
+        }
+
+        public async Task<List<Message>> GetMessagesInRange(int chatId, string startRangeUUID, string endRangeUUID)
+        {
+            var startRangeMessage = await _context.Messages.FindAsync(startRangeUUID);
+            var endRangeMessage = await _context.Messages.FindAsync(endRangeUUID);
+            var messages = await _context.Messages.Where(m => m.ChatId == chatId &&
+                                                                m.Timestamp > startRangeMessage.Timestamp &&
+                                                                m.Timestamp < endRangeMessage.Timestamp
+                                                                ).ToListAsync();
+            // sort desc
+            messages.Sort((f, s) => s.Timestamp.CompareTo(s.Timestamp));
+            return messages;
         }
 
         public async Task<List<Chat>> GetPrivateChats()
@@ -169,6 +191,17 @@ namespace WorkPortalAPI.Repositories
         public async Task<Boolean> IsGroupChat(int chatId)
         {
             return IsGroupChat(await Get(chatId));
+        }
+
+        public async Task<Boolean> MessageExistsInChat(int chatId, string messageUUID)
+        {
+            return await _context.Messages.Where(m => m.ChatId == chatId && m.UUID == messageUUID).AnyAsync();
+        }
+
+        public async Task<Boolean> HasMessageOlderThan(int chatId, string messageUUID)
+        {
+            var message = await _context.Messages.FindAsync(messageUUID);
+            return await _context.Messages.Where(m => m.ChatId == chatId && m.Timestamp < message.Timestamp).AnyAsync();
         }
     }
 }

@@ -53,6 +53,11 @@ namespace WorkPortalAPI.Models
             return Custom(null, returnCode);
         }
 
+        public static IActionResult InternalError()
+        {
+            return Custom(ReturnCode.INTERNAL_ERROR);
+        }
+
         public static IActionResult ArgumentInvalid(string argumentName)
         {
             return Custom("argument_name", argumentName, ReturnCode.INVALID_ARGUMENT);

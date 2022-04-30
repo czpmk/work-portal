@@ -17,8 +17,9 @@ namespace WorkPortalAPI.Repositories
         Task<Chat> GetPrivateChat(int firstUserId, int secondUserId);
         Task<Message> GetLastMessage(int chatId);
         Task<List<Message>> GetMessages(int chatId, int n = 50);
-        Task<List<Message>> GetMessagesSince(int chatId, DateTime timestamp);
-        Task<List<Message>> GetMessagesSince(int chatId, Message lastMessage);
+        Task<List<Message>> GetMessagesSince(int chatId, string UUID, int n = 50);
+        Task<List<Message>> GetMessagesUntil(int chatId, string UUID, int n = 50);
+        Task<List<Message>> GetMessagesInRange(int chatId, string startRangeUUID, string endRangeUUID);
         Task<Chat> Create(Chat chat);
         Task Update(Chat chat);
         Task Delete(int id);
@@ -28,5 +29,7 @@ namespace WorkPortalAPI.Repositories
         Task<Boolean> IsPrivateChat(int chatId);
         Boolean IsGroupChat(Chat chat);
         Task<Boolean> IsGroupChat(int chatId);
+        Task<Boolean> MessageExistsInChat(int chatId, string messageUUID);
+        Task<Boolean> HasMessageOlderThan(int chatId, string messageUUID);
     }
 }

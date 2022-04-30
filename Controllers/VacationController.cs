@@ -21,16 +21,20 @@ namespace WorkPortalAPI.Controllers
             this._vacationRepository = vacationRepository;
         }
 
-        [HttpGet]
-        public async Task<IEnumerable<Vacation>> Get()
+        [HttpGet("DEBUG")]
+        public async Task<IActionResult> Get()
         {
-            return await _vacationRepository.Get();
+            return WPResponse.Success(await _vacationRepository.Get());
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Vacation>> Get(int id)
+        [HttpGet("DEBUG/{id}")]
+        public async Task<IActionResult> Get(int id)
         {
-            return await _vacationRepository.Get(id);
+            var vacations = await _vacationRepository.Get(id);
+            if (vacations != null)
+                return WPResponse.Success(vacations);
+            else
+                return WPResponse.ArgumentDoesNotExist("id");
         }
     }
 }

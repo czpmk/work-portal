@@ -45,7 +45,7 @@ namespace WorkPortalAPI.Controllers
 
             // all ok
             string token = await _authRepository.CreateSession(user.Id);
-            return WPResponse.Custom(token);
+            return WPResponse.Success(token);
         }
 
         [HttpPost("register")]
@@ -73,7 +73,7 @@ namespace WorkPortalAPI.Controllers
             await _authRepository.CreateUser(user);
             return await Login(new Credentials { Email = user.Email, PasswordHash = passwordRaw });
             // Shall it log in by default? If not use this line
-            //return WPResponse.Create(ReturnCode.SUCCESS);
+            //return WPResponse.Success();
         }
 
         [HttpPost("logout")]
@@ -88,7 +88,7 @@ namespace WorkPortalAPI.Controllers
                 foreach (var s in sessions)
                     await _authRepository.TerminateSession(s);
 
-                return WPResponse.Custom(ReturnCode.SUCCESS);
+                return WPResponse.Success();
             }
             else
             {

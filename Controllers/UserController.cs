@@ -20,16 +20,26 @@ namespace WorkPortalAPI.Controllers
             this._userRepository = userRepository;
         }
 
-        [HttpGet]
-        public async Task<IEnumerable<User>> Get()
+        [HttpGet("DEBUG")]
+        public async Task<IActionResult> Get()
         {
-            return await _userRepository.Get();
+            return WPResponse.Success(await _userRepository.Get());
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<User>> Get(int id)
+        [HttpGet("DEBUG/{id}")]
+        public async Task<IActionResult> Get(int id)
         {
-            return await _userRepository.Get(id);
+            var user = await _userRepository.Get(id);
+            if (user == null)
+                return WPResponse.ArgumentDoesNotExist("id");
+            else
+                return WPResponse.Success(user);
+        }
+
+        [HttpPut("create")]
+        public async Task<IActionResult> CreateUser(User user, string token)
+        {
+            return WPResponse.Success(user);
         }
     }
 }

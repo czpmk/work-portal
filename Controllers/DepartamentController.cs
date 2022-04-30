@@ -30,23 +30,20 @@ namespace WorkPortalAPI.Controllers
             this._userRepository = userRepository;
         }
 
-        [HttpGet]
-        public async Task<IEnumerable<Departament>> Get()
+        [HttpGet("DEBUG")]
+        public async Task<IActionResult> Get()
         {
-            return await _departamentRepository.Get();
+            return WPResponse.Success(await _departamentRepository.Get());
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Departament>> Get(int id)
+        [HttpGet("DEBUG/{id}")]
+        public async Task<IActionResult> Get(int id)
         {
-            return await _departamentRepository.Get(id);
-        }
-
-        [HttpGet("byCompanyId/{companyId}")]
-        public async Task<IEnumerable<Departament>> GetByCompanyId(int companyId)
-        {
-            //var cc = DependencyResolver.Current.GetService<CompanyController>();
-            return await _departamentRepository.GetByCompanyId(companyId);
+            var departament = await _departamentRepository.Get(id);
+            if (departament == null)
+                return WPResponse.ArgumentDoesNotExist("id");
+            else
+                return WPResponse.Success(departament);
         }
 
         [HttpPost("create")]
@@ -78,11 +75,11 @@ namespace WorkPortalAPI.Controllers
             };
             var newChat = await _chatRepository.Create(chat);
 
-            return WPResponse.Custom(newDepartament);
+            return WPResponse.Success(newDepartament);
         }
 
         [HttpDelete("delete")]
-        public async Task<IActionResult> Delete(Departament departament, string token)
+        public async Task<IActionResult> Delete(int departamentId, string token)
         {
             if (!(await _authRepository.SessionValid(token)))
                 return WPResponse.AuthenticationInvalid();
@@ -93,8 +90,10 @@ namespace WorkPortalAPI.Controllers
             if (!user.IsAdmin && role.Type != RoleType.COMPANY_OWNER)
                 return WPResponse.AccessDenied("Departament/Create");
 
-            if (!(await _departamentRepository.Exists(departament.Id)))
+            if (!(await _departamentRepository.Exists(departamentId)))
                 return WPResponse.ArgumentDoesNotExist("DepartamentId");
+
+            var departament = await _departamentRepository.Get(departamentId);
 
             // REMOVE DEPARTAMENT CHAT
             var departamentChat = await _chatRepository.GetDepartamentChat(departament.CompanyId, departament.Id);
@@ -104,21 +103,24 @@ namespace WorkPortalAPI.Controllers
             // REMOVE DEPARTAMENTS
             await _departamentRepository.Delete(departament.Id);
 
-            return WPResponse.Custom();
+            return WPResponse.Success();
         }
 
         [HttpPut("SetHeadOfDepartament")]
-        public async Task<IActionResult> SetHeadOfDepartament(Departament departament, User newHead, string token)
+        public async Task<IActionResult> SetHeadOfDepartament(int departamentId, int userId, string token)
         {
             if (!(await _authRepository.SessionValid(token)))
                 return WPResponse.AuthenticationInvalid();
 
             var user = await _authRepository.GetUserByToken(token);
             if (!user.IsAdmin)
-                return WPResponse.AccessDenied("Company/Create");
+                return WPResponse.AccessDenied("Departament");
 
-            if (!(await _departamentRepository.Exists(departament)))
-                return WPResponse.ArgumentDoesNotExist("company");
+            if (!(await _departamentRepository.Exists(departamentId)))
+                return WPResponse.ArgumentDoesNotExist("departamentId");
+
+            var departament = await _departamentRepository.Get(departamentId);
+            var newHead = await _userRepository.Get(userId);
 
             if (!(await _userRepository.Exists(newHead.Id)))
                 return WPResponse.ArgumentDoesNotExist("newOwnerId");
@@ -130,8 +132,8 @@ namespace WorkPortalAPI.Controllers
                 await _departamentRepository.RetractOwnership(oldHead);
             }
 
-            await _departamentRepository.GrantOwnership(user, RoleType.HEAD_OF_DEPARTAMENT, departament.Id);
-            return WPResponse.Custom();
+            await _departamentRepository.GrantOwnership(newHead, RoleType.HEAD_OF_DEPARTAMENT, departament.Id);
+            return WPResponse.Success();
         }
     }
 }

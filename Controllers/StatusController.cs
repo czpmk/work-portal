@@ -20,16 +20,20 @@ namespace WorkPortalAPI.Controllers
             this._statusRepository = statusRepository;
         }
 
-        [HttpGet]
-        public async Task<IEnumerable<Status>> Get()
+        [HttpGet("DEBUG")]
+        public async Task<IActionResult> Get()
         {
-            return await _statusRepository.Get();
+            return WPResponse.Success(await _statusRepository.Get());
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Status>> Get(int id)
+        [HttpGet("DEBUG/{id}")]
+        public async Task<IActionResult> Get(int id)
         {
-            return await _statusRepository.Get(id);
+            var status = await _statusRepository.Get(id);
+            if (status != null)
+                return WPResponse.Success(status);
+            else
+                return WPResponse.ArgumentDoesNotExist("id");
         }
     }
 }

@@ -10,7 +10,7 @@ using WorkPortalAPI.Models;
 namespace WorkPortalAPI.Controllers
 {
     [Route("api/[controller]")]
-    public class CompanyController: ControllerBase
+    public class CompanyController : ControllerBase
     {
         private readonly ICompanyRepository _companyRepository;
         private readonly IDepartamentRepository _departamentRepository;
@@ -30,22 +30,20 @@ namespace WorkPortalAPI.Controllers
             this._userRepository = userRepository;
         }
 
-        [HttpGet]
-        public async Task<IEnumerable<Company>> Get()
+        [HttpGet("DEBUG")]
+        public async Task<IActionResult> Get()
         {
-            return await _companyRepository.Get();
+            return WPResponse.Success(await _companyRepository.Get());
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Company>> Get(int id)
+        [HttpGet("DEBUG/{id}")]
+        public async Task<IActionResult> Get(int id)
         {
-            return await _companyRepository.Get(id);
-        }
-
-        [HttpGet("TestMethodToDelete7")]
-        public async Task<IEnumerable<Company>> TestMethodToDelete7()
-        {
-            return await _companyRepository.Get();
+            var company = await _companyRepository.Get(id);
+            if (company == null)
+                return WPResponse.ArgumentDoesNotExist("id");
+            else
+                return WPResponse.Success(company);
         }
 
         [HttpPost("create")]
@@ -65,14 +63,14 @@ namespace WorkPortalAPI.Controllers
             var newCompany = await _companyRepository.Create(company);
 
             // CREATE COMPANY CHAT
-            var chat = new Chat() { CompanyId = newCompany.Id};
+            var chat = new Chat() { CompanyId = newCompany.Id };
             var newChat = await _chatRepository.Create(chat);
 
-            return WPResponse.Custom();
+            return WPResponse.Success(newCompany);
         }
 
         [HttpDelete("delete")]
-        public async Task<IActionResult> Delete(Company company, string token)
+        public async Task<IActionResult> Delete(int companyId, string token)
         {
             if (!(await _authRepository.SessionValid(token)))
                 return WPResponse.AuthenticationInvalid();
@@ -81,8 +79,9 @@ namespace WorkPortalAPI.Controllers
             if (!user.IsAdmin)
                 return WPResponse.AccessDenied("Company/Create");
 
-            if (!(await _companyRepository.Exists(company.Id)))
+            if (!(await _companyRepository.Exists(companyId)))
                 return WPResponse.ArgumentDoesNotExist("CompanyId");
+            var company = await _companyRepository.Get(companyId);
 
             // REMOVE COMPANY CHAT
             var companyChat = await _chatRepository.GetCompanyChat(company.Id);
@@ -101,11 +100,11 @@ namespace WorkPortalAPI.Controllers
 
             await _companyRepository.Delete(company.Id);
 
-            return WPResponse.Custom();
+            return WPResponse.Success();
         }
 
         [HttpPut("SetCompanyOwner")]
-        public async Task<IActionResult> SetCompanyOwner(Company company, User newOwner, string token)
+        public async Task<IActionResult> SetCompanyOwner(int companyId, int userId, string token)
         {
             if (!(await _authRepository.SessionValid(token)))
                 return WPResponse.AuthenticationInvalid();
@@ -114,11 +113,13 @@ namespace WorkPortalAPI.Controllers
             if (!user.IsAdmin)
                 return WPResponse.AccessDenied("Company/Create");
 
-            if (!(await _companyRepository.Exists(company)))
+            if (!(await _companyRepository.Exists(companyId)))
                 return WPResponse.ArgumentDoesNotExist("company");
+            var company = await _companyRepository.Get(companyId);
 
-            if (!(await _userRepository.Exists(newOwner.Id)))
+            if (!(await _userRepository.Exists(userId)))
                 return WPResponse.ArgumentDoesNotExist("newOwnerId");
+            var newOwner = await _userRepository.Get(userId);
 
             // get old owner
             var oldOwner = await _companyRepository.GetOwner(company);
@@ -127,8 +128,8 @@ namespace WorkPortalAPI.Controllers
                 await _companyRepository.RetractOwnership(oldOwner);
             }
 
-            await _companyRepository.GrantOwnership(user, RoleType.COMPANY_OWNER, company.Id);
-            return WPResponse.Custom();
+            await _companyRepository.GrantOwnership(newOwner, RoleType.COMPANY_OWNER, company.Id);
+            return WPResponse.Success();
         }
     }
 }

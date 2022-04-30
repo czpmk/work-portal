@@ -20,16 +20,20 @@ namespace WorkPortalAPI.Controllers
             this._roleRepository = roleRepository;
         }
 
-        [HttpGet]
-        public async Task<IEnumerable<Role>> Get()
+        [HttpGet("DEBUG")]
+        public async Task<IActionResult> Get()
         {
-            return await _roleRepository.Get();
+            return WPResponse.Success(await _roleRepository.Get());
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Role>> Get(int id)
+        [HttpGet("DEBUG/{id}")]
+        public async Task<IActionResult> Get(int id)
         {
-            return await _roleRepository.Get(id);
+            var role = await _roleRepository.Get(id);
+            if (role != null)
+                return WPResponse.Success(role);
+            else
+                return WPResponse.ArgumentDoesNotExist("id");
         }
     }
 }

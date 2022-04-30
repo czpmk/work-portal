@@ -27,7 +27,7 @@ namespace WorkPortalAPI.Models
 
     public static class WPResponse
     {
-        public static IActionResult Custom(object result, ReturnCode returnCode = ReturnCode.SUCCESS)
+        public static IActionResult Custom(object result, ReturnCode returnCode)
         {
             var objRes = new ObjectResult(new Dictionary<string, object> {
                 { "reason", ReturnCodeToString(returnCode) },
@@ -37,7 +37,7 @@ namespace WorkPortalAPI.Models
             return objRes;
         }
 
-        public static IActionResult Custom(object key, object value, ReturnCode returnCode = ReturnCode.SUCCESS)
+        public static IActionResult Custom(object key, object value, ReturnCode returnCode)
         {
             var objRes = new ObjectResult(new Dictionary<object, object> {
                 { "reason", ReturnCodeToString(returnCode) },
@@ -48,9 +48,35 @@ namespace WorkPortalAPI.Models
             return objRes;
         }
 
-        public static IActionResult Custom(ReturnCode returnCode = ReturnCode.SUCCESS)
+        public static IActionResult Custom(ReturnCode returnCode)
         {
             return Custom(null, returnCode);
+        }
+
+        public static IActionResult Success(object result)
+        {
+            var objRes = new ObjectResult(new Dictionary<string, object> {
+                { "reason", ReturnCodeToString(ReturnCode.SUCCESS) },
+                { "result", result },
+            });
+            objRes.StatusCode = (int)ReturnCode.SUCCESS;
+            return objRes;
+        }
+
+        public static IActionResult Success(object key, object value)
+        {
+            var objRes = new ObjectResult(new Dictionary<object, object> {
+                { "reason", ReturnCodeToString(ReturnCode.SUCCESS) },
+                { "result", null },
+                { key, value }
+            });
+            objRes.StatusCode = (int)ReturnCode.SUCCESS;
+            return objRes;
+        }
+
+        public static IActionResult Success()
+        {
+            return Custom(null, ReturnCode.SUCCESS);
         }
 
         public static IActionResult InternalError()

@@ -60,16 +60,16 @@ namespace WorkPortalAPI.Controllers
             if (await _companyRepository.Exists(company))
                 return WPResponse.ArgumentAlreadyExists("Company");
 
-            var newCompany = _companyRepository.Create(company);
+            var newCompany = await _companyRepository.Create(company);
 
             // CREATE COMPANY CHAT
             var chat = new Chat() { CompanyId = newCompany.Id};
-            var newChat = _chatRepository.Create(chat);
+            var newChat = await _chatRepository.Create(chat);
 
-            return WPResponse.Custom(newCompany);
+            return WPResponse.Custom();
         }
 
-        [HttpGet("delete")]
+        [HttpDelete("delete")]
         public async Task<IActionResult> Delete(Company company, string token)
         {
             if (!(await _authRepository.SessionValid(token)))
@@ -84,7 +84,8 @@ namespace WorkPortalAPI.Controllers
 
             // REMOVE COMPANY CHAT
             var companyChat = await _chatRepository.GetCompanyChat(company.Id);
-            await _chatRepository.Delete(companyChat.Id);
+            if (companyChat != null)
+                await _chatRepository.Delete(companyChat.Id);
 
             // REMOVE DEPARTAMENT CHATS
             var departamentChats = await _chatRepository.GetDepartamentChats(company.Id);

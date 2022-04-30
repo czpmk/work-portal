@@ -74,12 +74,12 @@ namespace WorkPortalAPI.Controllers
                 CompanyId = newDepartament.CompanyId,
                 DepartamentId = newDepartament.Id
             };
-            var newChat = _chatRepository.Create(chat);
+            var newChat = await _chatRepository.Create(chat);
 
             return WPResponse.Custom(newDepartament);
         }
 
-        [HttpGet("delete")]
+        [HttpDelete("delete")]
         public async Task<IActionResult> Delete(Departament departament, string token)
         {
             if (!(await _authRepository.SessionValid(token)))
@@ -96,7 +96,8 @@ namespace WorkPortalAPI.Controllers
 
             // REMOVE DEPARTAMENT CHAT
             var departamentChat = await _chatRepository.GetDepartamentChat(departament.CompanyId, departament.Id);
-            await _chatRepository.Delete(departamentChat.Id);
+            if (departamentChat != null)
+                await _chatRepository.Delete(departamentChat.Id);
 
             // REMOVE DEPARTAMENTS
             await _departamentRepository.Delete(departament.Id);

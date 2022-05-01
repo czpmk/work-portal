@@ -83,8 +83,8 @@ namespace WorkPortalAPI.Controllers
 
             var newChat = await _chatRepository.Create(chat);
             // CREATE CHAT VIEW REPORT - CRUCIAL!!!
-            await _chatViewReportRepository.Create(chat.FirstUserId.GetValueOrDefault(), chat.Id);
-            await _chatViewReportRepository.Create(chat.SecondUserId.GetValueOrDefault(), chat.Id);
+            await _chatViewReportRepository.Create(newChat.FirstUserId.GetValueOrDefault(), newChat.Id);
+            await _chatViewReportRepository.Create(newChat.SecondUserId.GetValueOrDefault(), newChat.Id);
 
             return WPResponse.Success(newChat);
         }

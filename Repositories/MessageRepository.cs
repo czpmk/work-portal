@@ -16,6 +16,11 @@ namespace WorkPortalAPI.Repositories
             this._context = context;
         }
 
+        public async Task<List<Message>> Get()
+        {
+            return await _context.Messages.ToListAsync();
+        }
+
         public async Task<Message> Get(string UUID)
         {
             return await _context.Messages.FindAsync(UUID);

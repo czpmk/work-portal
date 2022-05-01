@@ -21,6 +21,11 @@ namespace WorkPortalAPI.Repositories
             return chat;
         }
 
+        public async Task<List<Chat>> Get()
+        {
+            return await _context.Chats.ToListAsync();
+        }
+
         public async Task<Chat> Get(int chatId)
         {
             return await _context.Chats.FindAsync(chatId);

@@ -8,6 +8,7 @@ namespace WorkPortalAPI.Repositories
 {
     public interface IChatViewReportRepository
     {
+        Task<List<ChatViewReport>> Get();
         Task<ChatViewReport> Get(int id);
         Task<ChatViewReport> GetReportForUser(int chatId, int userId);
         Task<IEnumerable<ChatViewReport>> GetReportsForUser(int userId);

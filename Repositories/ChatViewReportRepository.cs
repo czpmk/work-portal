@@ -50,6 +50,11 @@ namespace WorkPortalAPI.Repositories
             return await _context.ChatViewReports.AnyAsync(c => c.UserId == userId && c.ChatId == chatId);
         }
 
+        public async Task<List<ChatViewReport>> Get()
+        {
+            return await _context.ChatViewReports.ToListAsync();
+        }
+
         public async Task<ChatViewReport> Get(int id)
         {
             return await _context.ChatViewReports.FindAsync(id);

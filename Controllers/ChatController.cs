@@ -34,6 +34,24 @@ namespace WorkPortalAPI.Controllers
             this._roleRepository = roleRepository;
         }
 
+        [HttpGet("DEBUG/chats")]
+        public async Task<IActionResult> GetChats()
+        {
+            return WPResponse.Success(await _chatRepository.Get());
+        }
+
+        [HttpGet("DEBUG/messages")]
+        public async Task<IActionResult> GetMessages()
+        {
+            return WPResponse.Success(await _messageRepository.Get());
+        }
+
+        [HttpGet("DEBUG/chatViewReports")]
+        public async Task<IActionResult> GetChatViewReports()
+        {
+            return WPResponse.Success(await _chatViewReportRepository.Get());
+        }
+
         [HttpPost("createPrivateChat")]
         public async Task<IActionResult> Create(Chat chat, string token)
         {

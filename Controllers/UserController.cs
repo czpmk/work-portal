@@ -36,10 +36,10 @@ namespace WorkPortalAPI.Controllers
                 return WPResponse.Success(user);
         }
 
-        [HttpPut("create")]
-        public async Task<IActionResult> CreateUser(User user, string token)
-        {
-            return WPResponse.Success(user);
-        }
+        //[HttpPut("create")]
+        //public async Task<IActionResult> CreateUser(User user, string token)
+        //{
+        //    return WPResponse.Success(user);
+        //}
     }
 }

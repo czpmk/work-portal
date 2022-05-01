@@ -39,16 +39,19 @@ namespace WorkPortalAPI.Repositories
         public async Task<Boolean> Exists(Chat chat)
         {
             List<Chat> chatList = new List<Chat>();
-            if (chat.FirstUserId != null && chat.SecondUserId != null)
+            if (IsPrivateChat(chat) && await PrivateChatExists(chat.FirstUserId.GetValueOrDefault(), chat.SecondUserId.GetValueOrDefault()))
+            {
                 chatList.Add(await GetPrivateChat(chat.FirstUserId.GetValueOrDefault(),
-                                    chat.SecondUserId.GetValueOrDefault()));
-
-            else if (chat.CompanyId != null && chat.DepartamentId == null)
-                chatList.Add(await GetCompanyChat(chat.CompanyId.GetValueOrDefault()));
-
-            else if (chat.CompanyId != null && chat.DepartamentId != null)
-                chatList.Add(await GetDepartamentChat(chat.CompanyId.GetValueOrDefault(),
-                                    chat.DepartamentId.GetValueOrDefault()));
+                    chat.SecondUserId.GetValueOrDefault()));
+            }
+            else if (IsGroupChat(chat) && await GroupChatExists(chat.CompanyId.GetValueOrDefault(), chat.DepartamentId))
+            {
+                if (chat.DepartamentId == null)
+                    chatList.Add(await GetCompanyChat(chat.CompanyId.GetValueOrDefault()));
+                else
+                    chatList.Add(await GetDepartamentChat(chat.CompanyId.GetValueOrDefault(),
+                    chat.DepartamentId.GetValueOrDefault()));
+            }
 
             return chatList.Any();
         }
@@ -207,6 +210,16 @@ namespace WorkPortalAPI.Repositories
         {
             var message = await _context.Messages.FindAsync(messageUUID);
             return await _context.Messages.Where(m => m.ChatId == chatId && m.Timestamp < message.Timestamp).AnyAsync();
+        }
+
+        public async Task<Boolean> PrivateChatExists(int id_1, int id_2)
+        {
+            return await _context.Chats.Where(c => (c.FirstUserId == id_1 || c.FirstUserId == id_2) && (c.SecondUserId == id_1 || c.SecondUserId == id_2)).AnyAsync();
+        }
+
+        public async Task<Boolean> GroupChatExists(int companyId, int? departamentId = null)
+        {
+            return await _context.Chats.Where(c => (c.CompanyId == companyId) && (c.DepartamentId == departamentId)).AnyAsync();
         }
     }
 }

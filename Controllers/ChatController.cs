@@ -213,5 +213,24 @@ namespace WorkPortalAPI.Controllers
 
             return WPResponse.Success();
         }
+
+        [HttpGet("getChatsForUser")]
+        public async Task<IActionResult> GetMyChats(string token)
+        {
+            if (!(await _authRepository.SessionValid(token)))
+                return WPResponse.AuthenticationInvalid();
+
+            var user = await _authRepository.GetUserByToken(token);
+
+            var chatViewReports = await _chatViewReportRepository.GetReportsForUser(user.Id);
+            var chats = new List<Chat>();
+
+            foreach (var cvr in chatViewReports)
+            {
+                chats.Add(await _chatRepository.Get(cvr.ChatId));
+            }
+
+            return WPResponse.Success(chats);
+        }
     }
 }

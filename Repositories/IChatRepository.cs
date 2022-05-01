@@ -9,6 +9,7 @@ namespace WorkPortalAPI.Repositories
     public interface IChatRepository
     {
         Task<List<Chat>> Get();
+        Task<Chat> Get(int chatId);
         Task<List<Chat>> GetGroupChats();
         Task<Chat> GetCompanyChat(int companyId);
         Task<List<Chat>> GetDepartamentChats(int companyId);

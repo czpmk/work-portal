@@ -109,7 +109,7 @@ namespace WorkPortalAPI.Controllers
                     status.Add(cvr.ChatId, String.Format("Invalid Chat View Repository entry {0}: ChatId = null", cvr.Id));
                     continue;
                 }
-                if (await _chatRepository.Exists(cvr.ChatId)) // The chat pointed to by Chat View Repository does not exist
+                if (!(await _chatRepository.Exists(cvr.ChatId))) // The chat pointed to by Chat View Repository does not exist
                 {
                     status.Add(cvr.ChatId, String.Format("Invalid Chat View Repository entry {0}: The chat {1} does not exist", cvr.Id, cvr.ChatId));
                     continue;

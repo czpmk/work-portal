@@ -218,7 +218,7 @@ namespace WorkPortalAPI.Controllers
                 MessageUUID = UUID,
                 UserId = user.Id
             };
-            await _chatViewReportRepository.Create(cvr);
+            await _chatViewReportRepository.Update(cvr);
 
             return WPResponse.Success();
         }

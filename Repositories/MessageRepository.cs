@@ -42,6 +42,11 @@ namespace WorkPortalAPI.Repositories
             }
         }
 
+        public async Task DeleteAll()
+        {
+            await _context.Database.ExecuteSqlRawAsync("TRUNCATE TABLE dbo.messages");
+        }
+
         public async Task<Boolean> Exists(string UUID)
         {
             return await _context.Messages.AnyAsync(m => m.UUID == UUID);

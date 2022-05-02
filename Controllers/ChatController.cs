@@ -232,5 +232,13 @@ namespace WorkPortalAPI.Controllers
 
             return WPResponse.Success(chats);
         }
+
+        [HttpDelete("DEBUG/resetMessages")]
+        public async Task<IActionResult> ResetMessages()
+        {
+
+            await _messageRepository.DeleteAll();
+            return WPResponse.Success();
+        }
     }
 }

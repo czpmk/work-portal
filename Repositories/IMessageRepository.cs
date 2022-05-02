@@ -16,6 +16,7 @@ namespace WorkPortalAPI.Repositories
         Task<Message> Create(Message message);
         Task Update(Message message);
         Task Delete(string UUID);
+        Task DeleteAll();
         Task<Boolean> Exists(string UUID);
     }
 }

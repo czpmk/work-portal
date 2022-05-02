@@ -197,7 +197,7 @@ namespace WorkPortalAPI.Controllers
         }
 
         [HttpPut("setStatus")]
-        public async Task<IActionResult> AddMessage(int chatId, string UUID, string token)
+        public async Task<IActionResult> SetStatus(int chatId, string UUID, string token)
         {
             if (!(await _authRepository.SessionValid(token)))
                 return WPResponse.AuthenticationInvalid();
@@ -212,12 +212,8 @@ namespace WorkPortalAPI.Controllers
             if (!(await _chatViewReportRepository.Exists(user.Id, message.ChatId)))
                 return WPResponse.AccessDenied("Chat");
 
-            var cvr = new ChatViewReport()
-            {
-                ChatId = chatId,
-                MessageUUID = UUID,
-                UserId = user.Id
-            };
+            var cvr = await _chatViewReportRepository.GetReportForUser(chatId, user.Id);
+            cvr.MessageUUID = UUID;
             await _chatViewReportRepository.Update(cvr);
 
             return WPResponse.Success();

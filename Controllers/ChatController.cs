@@ -100,20 +100,50 @@ namespace WorkPortalAPI.Controllers
             var status = new Dictionary<int, Object>();
 
             var chatViewReports = await _chatViewReportRepository.GetReportsForUser(user.Id);
-            // DEBUG WARNING MESSAGES - 
+            // DEBUG WARNING MESSAGES ahead
             var i = -10000000;
             foreach (var cvr in chatViewReports)
             {
-                if (status.Keys.Contains(cvr.ChatId))
+                if (cvr.ChatId == null) // DEBUG - remove when it's debugged
+                {
+                    status.Add(cvr.ChatId, String.Format("Invalid Chat View Repository entry {0}: ChatId = null", cvr.Id));
+                    continue;
+                }
+                if (await _chatRepository.Exists(cvr.ChatId)) // The chat pointed to by Chat View Repository does not exist
+                {
+                    status.Add(cvr.ChatId, String.Format("Invalid Chat View Repository entry {0}: The chat {1} does not exist", cvr.Id, cvr.ChatId));
+                    continue;
+                }
+
+                var lastMessage = await _chatRepository.GetLastMessage(cvr.ChatId);
+                if (lastMessage == null)
+                {
+                    if (cvr.MessageUUID == null)
+                    {
+                        status.Add(cvr.ChatId, true);
+                        continue;
+                    }
+                    else // Another error in DB entries
+                    {
+                        cvr.MessageUUID = null;
+                        await _chatViewReportRepository.Update(cvr);
+                        status.Add(cvr.ChatId, String.Format("Invalid Chat View Repository entry {0}: " +
+                            "The chat is empty, yet the CVR points to a not null message. Setting it to null", cvr.Id));
+                        continue;
+                    }
+                }
+
+                if (status.Keys.Contains(cvr.ChatId)) // ... and another...
                 {
                     var mess = String.Format("WARNING: Duplicate chatId ({0}) found with message UUID {1}", cvr.ChatId, cvr.MessageUUID);
                     status.Add(i, mess);
                     i++;
                 }
                 else
+                {
                     status.Add(cvr.ChatId, cvr.MessageUUID == (await _chatRepository.GetLastMessage(cvr.ChatId)).UUID);
+                }
             }
-
             return WPResponse.Success(status);
         }
 

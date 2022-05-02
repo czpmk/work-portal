@@ -97,12 +97,21 @@ namespace WorkPortalAPI.Controllers
 
             var user = await _authRepository.GetUserByToken(token);
 
-            var status = new Dictionary<int, bool>();
+            var status = new Dictionary<int, Object>();
 
             var chatViewReports = await _chatViewReportRepository.GetReportsForUser(user.Id);
+            // DEBUG WARNING MESSAGES - 
+            var i = -10000000;
             foreach (var cvr in chatViewReports)
             {
-                status.Add(cvr.ChatId, cvr.MessageUUID == (await _chatRepository.GetLastMessage(cvr.ChatId)).UUID);
+                if (status.Keys.Contains(cvr.ChatId))
+                {
+                    var mess = String.Format("WARNING: Duplicate chatId ({0}) found with message UUID {1}", cvr.ChatId, cvr.MessageUUID);
+                    status.Add(i, mess);
+                    i++;
+                }
+                else
+                    status.Add(cvr.ChatId, cvr.MessageUUID == (await _chatRepository.GetLastMessage(cvr.ChatId)).UUID);
             }
 
             return WPResponse.Success(status);

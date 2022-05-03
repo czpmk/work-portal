@@ -249,7 +249,7 @@ namespace WorkPortalAPI.Repositories
             if (await IsPrivateChat(chatId))
             {
                 chatDescription["users"] = await usersRolesJoinedQuery.Where(u => u.Id == chat.FirstUserId || u.Id == chat.SecondUserId)
-                    .ToDictionaryAsync(u => u.Id);
+                    .ToListAsync();
             }
             else
             {

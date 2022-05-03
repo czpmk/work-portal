@@ -9,10 +9,11 @@ namespace WorkPortalAPI.Repositories
     public interface IStatusRepository
     {
         Task<IEnumerable<Status>> Get();
-        Task<Status> Get(int id);
+        Task<IEnumerable<Status>> Get(int userId);
+        Task<Status> Last(int userId);
         Task<Status> Create(Status status);
         Task Update(Status status);
         Task Delete(int id);
-        Task Delete(string token);
+        //Task Delete(string token);
     }
 }

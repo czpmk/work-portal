@@ -28,27 +28,34 @@ namespace WorkPortalAPI.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task Delete(string token)
-        {
-            var status = await _context.Statuses.FindAsync(token);
-            _context.Statuses.Remove(status);
-            await _context.SaveChangesAsync();
-        }
+        //public async Task Delete(string token)
+        //{
+        //    var status = await _context.Statuses.FindAsync(token);
+        //    _context.Statuses.Remove(status);
+        //    await _context.SaveChangesAsync();
+        //}
 
         public async Task<IEnumerable<Status>> Get()
         {
             return await _context.Statuses.ToListAsync();
         }
 
-        public async Task<Status> Get(int id)
-        {
-            return await _context.Statuses.FindAsync(id);
-        }
-
         public async Task Update(Status status)
         {
             _context.Entry(status).State = EntityState.Modified;
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<Status>> Get(int userId)
+        {
+            return await _context.Statuses.Where(s => s.UserId == userId).ToListAsync();
+        }
+
+        public async Task<Status> Last(int userId)
+        {
+            var status = await _context.Statuses.Where(s => s.UserId == userId).ToListAsync();
+            status.Sort((f, s) => s.Timestamp.CompareTo(f.Timestamp));
+            return status.FirstOrDefault();
         }
     }
 }

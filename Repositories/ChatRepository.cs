@@ -248,7 +248,7 @@ namespace WorkPortalAPI.Repositories
 
             if (await IsPrivateChat(chatId))
             {
-                chatDescription["users"] = usersRolesJoinedQuery.Where(u => u.Id == chat.FirstUserId || u.Id == chat.SecondUserId)
+                chatDescription["users"] = await usersRolesJoinedQuery.Where(u => u.Id == chat.FirstUserId || u.Id == chat.SecondUserId)
                     .ToDictionaryAsync(u => u.Id);
             }
             else
@@ -259,7 +259,7 @@ namespace WorkPortalAPI.Repositories
                 // departament = null => get users for an entire Company
                 if (chat.DepartamentId == null)
                 {
-                    chatDescription["users"] = usersRolesJoinedQuery.Where(u => chat.CompanyId == u.CompanyId)
+                    chatDescription["users"] = await usersRolesJoinedQuery.Where(u => chat.CompanyId == u.CompanyId)
                         .ToDictionaryAsync(u => u.Id);
                 }
                 // departament != null => get users for the departament only
@@ -268,7 +268,7 @@ namespace WorkPortalAPI.Repositories
                     var departament = await _context.Departaments.FindAsync(chat.DepartamentId);
                     chatDescription.Add("departament", departament.Name);
 
-                    chatDescription["users"] = usersRolesJoinedQuery.Where(u => u.CompanyId == chat.CompanyId &&
+                    chatDescription["users"] = await usersRolesJoinedQuery.Where(u => u.CompanyId == chat.CompanyId &&
                                                                      u.DepartamentId == chat.DepartamentId).ToDictionaryAsync(u => u.Id);
                 }
             }

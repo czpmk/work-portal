@@ -246,10 +246,11 @@ namespace WorkPortalAPI.Repositories
                 }
                 );
 
+
             if (await IsPrivateChat(chatId))
             {
                 chatDescription["users"] = await usersRolesJoinedQuery.Where(u => u.Id == chat.FirstUserId || u.Id == chat.SecondUserId)
-                    .ToListAsync();
+                    .ToDictionaryAsync(u => u.Id);
             }
             else
             {
@@ -272,7 +273,6 @@ namespace WorkPortalAPI.Repositories
                                                                      u.DepartamentId == chat.DepartamentId).ToDictionaryAsync(u => u.Id);
                 }
             }
-
             return chatDescription;
         }
     }

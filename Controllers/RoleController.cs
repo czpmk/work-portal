@@ -36,7 +36,7 @@ namespace WorkPortalAPI.Controllers
                 return WPResponse.ArgumentDoesNotExist("id");
         }
 
-        [HttpGet("DEBUG/create")]
+        [HttpPut("DEBUG/create")]
         public async Task<IActionResult> Create(Role role)
         {
 

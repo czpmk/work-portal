@@ -296,11 +296,14 @@ namespace WorkPortalAPI.Controllers
             var user = await _authRepository.GetUserByToken(token);
 
             var chatViewReports = await _chatViewReportRepository.GetReportsForUser(user.Id);
-            var chats = new List<Chat>();
+            var chats = new List<Tuple<Chat, Dictionary<string, object>>>();
 
             foreach (var cvr in chatViewReports)
             {
-                chats.Add(await _chatRepository.Get(cvr.ChatId));
+                chats.Add(
+                    Tuple.Create(await _chatRepository.Get(cvr.ChatId), 
+                    await _chatRepository.GetChatDescriptionDictionary(cvr.ChatId))
+                    );
             }
 
             return WPResponse.Success(chats);

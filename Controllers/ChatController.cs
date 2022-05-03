@@ -90,7 +90,7 @@ namespace WorkPortalAPI.Controllers
         }
 
         [HttpGet("getStatus")]
-        public async Task<IActionResult> Refresh(string token)
+        public async Task<IActionResult> RefreshAll(string token)
         {
             if (!(await _authRepository.SessionValid(token)))
                 return WPResponse.AuthenticationInvalid();
@@ -145,6 +145,44 @@ namespace WorkPortalAPI.Controllers
                 }
             }
             return WPResponse.Success(status);
+        }
+
+        [HttpGet("{chatId}/getStatus")]
+        public async Task<IActionResult> RefreshSingleChat(string token, int chatId)
+        {
+            if (!(await _authRepository.SessionValid(token)))
+                return WPResponse.AuthenticationInvalid();
+
+            var user = await _authRepository.GetUserByToken(token);
+
+            if (!(await _chatRepository.Exists(chatId))) // The chat does not exist
+            {
+                return WPResponse.ArgumentAlreadyExists("chatId");
+            }
+
+            var chatViewReports = await _chatViewReportRepository.GetReportsForUser(user.Id);
+            var cvr = chatViewReports.Where(c => c.ChatId == chatId).FirstOrDefault();
+            if (cvr == null)
+            {
+                return WPResponse.AccessDenied("chat");
+            }    
+
+            var lastMessage = await _chatRepository.GetLastMessage(chatId);
+            if (lastMessage == null)
+            {
+                if (cvr.MessageUUID == null)
+                {
+                    return WPResponse.Success(true);
+                }
+                else // fix db entry
+                {
+                    cvr.MessageUUID = null;
+                    await _chatViewReportRepository.Update(cvr);
+                    return WPResponse.Success(true);
+                }
+            }
+
+            return WPResponse.Success(lastMessage.UUID == cvr.MessageUUID);
         }
 
         [HttpGet("olderMessageExists")]

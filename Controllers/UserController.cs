@@ -112,7 +112,7 @@ namespace WorkPortalAPI.Controllers
             createdUser.Password = null;
             createdUser.Salt = null;
 
-            return WPResponse.Success(user);
+            return WPResponse.Success(createdUser);
         }
     }
 }

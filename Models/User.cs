@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Swashbuckle.AspNetCore.Annotations;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
@@ -12,6 +14,7 @@ namespace WorkPortalAPI.Models
     public class User
     {
         [Required(AllowEmptyStrings = true)]
+        [SwaggerSchema(ReadOnly = true)]
         [Column("id")]
         public int Id { get; set; }
 
@@ -31,7 +34,7 @@ namespace WorkPortalAPI.Models
         public string Email { get; set; }
 
         [Required(ErrorMessage = "Password required")]
-        [StringLength(64, ErrorMessage = "Invalid length", MinimumLength = 2)]
+        [StringLength(64, ErrorMessage = "Invalid length", MinimumLength = 64)]
         [Column("password")]
         public string Password { get; set; }
 
@@ -39,10 +42,12 @@ namespace WorkPortalAPI.Models
         public string ProfilePicture { get; set; }
 
         [Required(AllowEmptyStrings = true)]
+        [DefaultValue(false)]
         [Column("is_admin")]
         public bool IsAdmin { get; set; }
 
         [Column("salt")]
+        [SwaggerSchema(ReadOnly = true)]
         public string Salt { get; set; }
 
         [Required(ErrorMessage = "Language required")]

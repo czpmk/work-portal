@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Swashbuckle.AspNetCore.Annotations;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -17,6 +18,7 @@ namespace WorkPortalAPI.Models
     public class ChatViewReport
     {
         [Column("id")]
+        [SwaggerSchema(ReadOnly = true)]
         public int Id { get; set; }
 
         [Column("user_id")]

@@ -165,7 +165,7 @@ namespace WorkPortalAPI.Controllers
             if (cvr == null)
             {
                 return WPResponse.AccessDenied("chat");
-            }    
+            }
 
             var lastMessage = await _chatRepository.GetLastMessage(chatId);
             if (lastMessage == null)
@@ -296,13 +296,15 @@ namespace WorkPortalAPI.Controllers
             var user = await _authRepository.GetUserByToken(token);
 
             var chatViewReports = await _chatViewReportRepository.GetReportsForUser(user.Id);
-            var chats = new List<Tuple<Chat, Dictionary<string, object>>>();
+            var chats = new List<Dictionary<string, object>>();
 
             foreach (var cvr in chatViewReports)
             {
                 chats.Add(
-                    Tuple.Create(await _chatRepository.Get(cvr.ChatId), 
-                    await _chatRepository.GetChatDescriptionDictionary(cvr.ChatId))
+                    new Dictionary<string, object>() {
+                        {"chat", await _chatRepository.Get(cvr.ChatId)},
+                        {"description", await _chatRepository.GetChatDescriptionDictionary(cvr.ChatId)}
+                    }
                     );
             }
 

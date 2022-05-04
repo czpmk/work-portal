@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Swashbuckle.AspNetCore.Annotations;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -11,6 +12,7 @@ namespace WorkPortalAPI.Models
     public class Chat
     {
         [Column("id")]
+        [SwaggerSchema(ReadOnly = true)]
         public int Id { get; set; }
 
         [Column("company_id")]

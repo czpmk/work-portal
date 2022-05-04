@@ -15,17 +15,11 @@ namespace WorkPortalAPI.Controllers
     {
         private readonly IUserRepository _userRepository;
         private readonly IAuthRepository _authRepository;
-        private readonly IRoleRepository _roleRepository;
-        private readonly ICompanyRepository _companyRepository;
-        private readonly IDepartamentRepository _departamentRepository;
 
-        public UserController(IAuthRepository authRepository, IUserRepository userRepository, IRoleRepository roleRepository, ICompanyRepository companyRepository, IDepartamentRepository departamentRepository)
+        public UserController(IAuthRepository authRepository, IUserRepository userRepository)
         {
             this._userRepository = userRepository;
             this._authRepository = authRepository;
-            this._roleRepository = roleRepository;
-            this._companyRepository = companyRepository;
-            this._departamentRepository = departamentRepository;
         }
 
         [HttpGet("DEBUG")]
@@ -58,61 +52,10 @@ namespace WorkPortalAPI.Controllers
             return WPResponse.Success(role);
         }
 
-        [HttpPut("create")]
-        public async Task<IActionResult> CreateUser(User user, string token, int companyId, int departamentId, int roleTypeId)
-        {
-            var invokingUser = await _authRepository.GetUserByToken(token);
-            var invokingUserRole = await _authRepository.GetUserRoleByToken(token);
-
-            user.Salt = Guid.NewGuid().ToString().Replace("-","");
-            user.Password = Utils.GetSHA256HashOf(user.Password + user.Salt);
-
-            //check if invoking user has privilege to create administrator account
-            if((!invokingUser.IsAdmin) && user.IsAdmin)
-            {
-                return WPResponse.AccessDenied("IsAdmin");
-            }
-
-            //check if user already exists
-            if (await _userRepository.Exists(user.Email))
-            {
-                return WPResponse.ArgumentAlreadyExists("Email");
-            }
-
-            //check if provided company exists
-            if(!(await _companyRepository.Exists(companyId)))
-            {
-                return WPResponse.ArgumentDoesNotExist("companyId");
-            }
-
-            //check if provided departament exists
-            if (!(await _departamentRepository.Exists(companyId)))
-            {
-                return WPResponse.ArgumentDoesNotExist("departamentId");
-            }
-
-            //check if provided role exists
-            if(!Enum.IsDefined(typeof(RoleType), roleTypeId))
-            {
-                return WPResponse.ArgumentDoesNotExist("roleTypeId");
-            }
-
-            //TODO: Privilege Check
-
-            var createdUser = await _userRepository.Create(user);
-
-            Role createdUserRole = new();
-            createdUserRole.CompanyId = companyId;
-            createdUserRole.DepartamentId = departamentId;
-            createdUserRole.UserId = createdUser.Id;
-            createdUserRole.Type = (RoleType)roleTypeId;
-
-            await _roleRepository.Create(createdUserRole);
-
-            createdUser.Password = null;
-            createdUser.Salt = null;
-
-            return WPResponse.Success(user);
-        }
+        //[HttpPut("create")]
+        //public async Task<IActionResult> CreateUser(User user, string token)
+        //{
+        //    return WPResponse.Success(user);
+        //}
     }
 }

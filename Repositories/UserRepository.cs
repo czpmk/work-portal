@@ -48,11 +48,5 @@ namespace WorkPortalAPI.Repositories
         {
             return await _context.Users.Where(u => u.Id == id).AnyAsync();
         }
-
-        public async Task<Boolean> Exists(string email)
-        {
-            return await _context.Users.Where(u => u.Email == email).AnyAsync();
-        }
-
     }
 }

@@ -49,7 +49,6 @@ namespace WorkPortalAPI
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "WorkPortalAPI", Version = "v1" });
-                c.EnableAnnotations();
             });
         }
 

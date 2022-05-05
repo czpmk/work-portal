@@ -79,11 +79,6 @@ namespace WorkPortalAPI.Controllers
             var user = await _authRepository.GetUserByToken(token);
             var lastStatus = await _statusRepository.Last(user.Id);
 
-            if (lastStatus == null)
-            {
-
-            }
-
             var newStatus = new Status();
 
             newStatus.Timestamp = DateTime.Now;

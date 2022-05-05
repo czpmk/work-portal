@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace WorkPortalAPI.Models
 {
     [Table("users")]
-    public class UserEdition
+    public class UserInfo
     {
 
         [StringLength(64, ErrorMessage = "Invalid length", MinimumLength = 2)]

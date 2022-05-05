@@ -120,7 +120,7 @@ namespace WorkPortalAPI.Controllers
         }
 
         [HttpPatch("edit")]
-        public async Task<IActionResult> EditUserSelf(UserEdition userEdition, string token)
+        public async Task<IActionResult> EditUserSelf(UserInfo userEdition, string token)
         {
             if (!(await _authRepository.SessionValid(token)))
                 return WPResponse.AuthenticationInvalid();
@@ -128,24 +128,25 @@ namespace WorkPortalAPI.Controllers
             var invokingUser = await _authRepository.GetUserByToken(token);
             var userToEdit = await _authRepository.GetUserByToken(token);
 
-            if (!userToEdit.Email.Equals(userEdition.Email))
+            //set new values
+            if (userEdition.Email != null && !userToEdit.Email.Equals(userEdition.Email))
             {
                 userToEdit.Email = userEdition.Email;
             }
-            if (!userToEdit.FirstName.Equals(userEdition.FirstName))
+            if (userEdition.FirstName != null && !userToEdit.FirstName.Equals(userEdition.FirstName))
             {
                 userToEdit.FirstName = userEdition.FirstName;
             }
-            if (!userToEdit.Surname.Equals(userEdition.Surname))
+            if (userEdition.Surname != null && !userToEdit.Surname.Equals(userEdition.Surname))
             {
                 userToEdit.Surname = userEdition.Surname;
             }
-            if (!userToEdit.IsAdmin.Equals(userEdition.IsAdmin))
+            if (userEdition.IsAdmin != null && !userToEdit.IsAdmin.Equals(userEdition.IsAdmin))
             {
                 if (!invokingUser.IsAdmin) return WPResponse.AccessDenied("IsAdmin");
                 userToEdit.IsAdmin = userEdition.IsAdmin;
             }
-            if (!userToEdit.Language.Equals(userEdition.Language))
+            if (userEdition.Language != null && !userToEdit.Language.Equals(userEdition.Language))
             {
                 userToEdit.Language = userEdition.Language;
             }
@@ -156,7 +157,7 @@ namespace WorkPortalAPI.Controllers
         }
 
         [HttpPatch("edit/{userId}")]
-        public async Task<IActionResult> EditUser(UserEdition userEdition, string token, int userId)
+        public async Task<IActionResult> EditUser(UserInfo userEdition, string token, int userId)
         {
             if (!(await _authRepository.SessionValid(token)))
                 return WPResponse.AuthenticationInvalid();
@@ -173,24 +174,24 @@ namespace WorkPortalAPI.Controllers
             var userToEdit = await _userRepository.Get(userId);
 
             //set new values
-            if (userToEdit.Email != null && !userToEdit.Email.Equals(userEdition.Email))
+            if (userEdition.Email != null && !userToEdit.Email.Equals(userEdition.Email))
             {
                 userToEdit.Email = userEdition.Email;
             }
-            if (userToEdit.FirstName != null && !userToEdit.FirstName.Equals(userEdition.FirstName))
+            if (userEdition.FirstName != null && !userToEdit.FirstName.Equals(userEdition.FirstName))
             {
                 userToEdit.FirstName = userEdition.FirstName;
             }
-            if (userToEdit.Surname != null && !userToEdit.Surname.Equals(userEdition.Surname))
+            if (userEdition.Surname != null && !userToEdit.Surname.Equals(userEdition.Surname))
             {
                 userToEdit.Surname = userEdition.Surname;
             }
-            if (userToEdit.IsAdmin != null && !userToEdit.IsAdmin.Equals(userEdition.IsAdmin))
+            if (userEdition.IsAdmin != null && !userToEdit.IsAdmin.Equals(userEdition.IsAdmin))
             {
                 if (!invokingUser.IsAdmin) return WPResponse.AccessDenied("IsAdmin");
                 userToEdit.IsAdmin = userEdition.IsAdmin;
             }
-            if (userToEdit.Language != null && !userToEdit.Language.Equals(userEdition.Language))
+            if (userEdition.Language != null && !userToEdit.Language.Equals(userEdition.Language))
             {
                 userToEdit.Language = userEdition.Language;
             }

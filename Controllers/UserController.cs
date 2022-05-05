@@ -61,14 +61,18 @@ namespace WorkPortalAPI.Controllers
         [HttpPut("create")]
         public async Task<IActionResult> CreateUser(User user, string token, int companyId, int departamentId, int roleTypeId)
         {
+
+            if (!(await _authRepository.SessionValid(token)))
+                return WPResponse.AuthenticationInvalid();
+
             var invokingUser = await _authRepository.GetUserByToken(token);
             var invokingUserRole = await _authRepository.GetUserRoleByToken(token);
 
-            user.Salt = Guid.NewGuid().ToString().Replace("-","");
+            user.Salt = Guid.NewGuid().ToString().Replace("-", "");
             user.Password = Utils.GetSHA256HashOf(user.Password + user.Salt);
 
             //check if invoking user has privilege to create administrator account
-            if((!invokingUser.IsAdmin) && user.IsAdmin)
+            if ((!invokingUser.IsAdmin) && user.IsAdmin)
             {
                 return WPResponse.AccessDenied("IsAdmin");
             }
@@ -80,19 +84,19 @@ namespace WorkPortalAPI.Controllers
             }
 
             //check if provided company exists
-            if(!(await _companyRepository.Exists(companyId)))
+            if (!(await _companyRepository.Exists(companyId)))
             {
                 return WPResponse.ArgumentDoesNotExist("companyId");
             }
 
             //check if provided departament exists
-            if (!(await _departamentRepository.Exists(companyId)))
+            if (!(await _departamentRepository.Exists(departamentId)))
             {
                 return WPResponse.ArgumentDoesNotExist("departamentId");
             }
 
             //check if provided role exists
-            if(!Enum.IsDefined(typeof(RoleType), roleTypeId))
+            if (!Enum.IsDefined(typeof(RoleType), roleTypeId))
             {
                 return WPResponse.ArgumentDoesNotExist("roleTypeId");
             }
@@ -113,6 +117,156 @@ namespace WorkPortalAPI.Controllers
             createdUser.Salt = null;
 
             return WPResponse.Success(createdUser);
+        }
+
+        [HttpPatch("edit")]
+        public async Task<IActionResult> EditUserSelf(UserEdition userEdition, string token)
+        {
+            if (!(await _authRepository.SessionValid(token)))
+                return WPResponse.AuthenticationInvalid();
+
+            var invokingUser = await _authRepository.GetUserByToken(token);
+            var userToEdit = await _authRepository.GetUserByToken(token);
+
+            if (!userToEdit.Email.Equals(userEdition.Email))
+            {
+                userToEdit.Email = userEdition.Email;
+            }
+            if (!userToEdit.FirstName.Equals(userEdition.FirstName))
+            {
+                userToEdit.FirstName = userEdition.FirstName;
+            }
+            if (!userToEdit.Surname.Equals(userEdition.Surname))
+            {
+                userToEdit.Surname = userEdition.Surname;
+            }
+            if (!userToEdit.IsAdmin.Equals(userEdition.IsAdmin))
+            {
+                if (!invokingUser.IsAdmin) return WPResponse.AccessDenied("IsAdmin");
+                userToEdit.IsAdmin = userEdition.IsAdmin;
+            }
+            if (!userToEdit.Language.Equals(userEdition.Language))
+            {
+                userToEdit.Language = userEdition.Language;
+            }
+
+            await _userRepository.Update(userToEdit);
+
+            return WPResponse.Success();
+        }
+
+        [HttpPatch("edit/{userId}")]
+        public async Task<IActionResult> EditUser(UserEdition userEdition, string token, int userId)
+        {
+            if (!(await _authRepository.SessionValid(token)))
+                return WPResponse.AuthenticationInvalid();
+
+            var invokingUser = await _authRepository.GetUserByToken(token);
+            var invokingUserRole = await _authRepository.GetUserRoleByToken(token);
+
+            //check if user exists
+            if (!(await _userRepository.Exists(userId)))
+            {
+                return WPResponse.ArgumentDoesNotExist("userId");
+            }
+
+            var userToEdit = await _userRepository.Get(userId);
+
+            //set new values
+            if (userToEdit.Email != null && !userToEdit.Email.Equals(userEdition.Email))
+            {
+                userToEdit.Email = userEdition.Email;
+            }
+            if (userToEdit.FirstName != null && !userToEdit.FirstName.Equals(userEdition.FirstName))
+            {
+                userToEdit.FirstName = userEdition.FirstName;
+            }
+            if (userToEdit.Surname != null && !userToEdit.Surname.Equals(userEdition.Surname))
+            {
+                userToEdit.Surname = userEdition.Surname;
+            }
+            if (userToEdit.IsAdmin != null && !userToEdit.IsAdmin.Equals(userEdition.IsAdmin))
+            {
+                if (!invokingUser.IsAdmin) return WPResponse.AccessDenied("IsAdmin");
+                userToEdit.IsAdmin = userEdition.IsAdmin;
+            }
+            if (userToEdit.Language != null && !userToEdit.Language.Equals(userEdition.Language))
+            {
+                userToEdit.Language = userEdition.Language;
+            }
+
+            //TODO: Privilege check
+
+            await _userRepository.Update(userToEdit);
+
+            return WPResponse.Success();
+        }
+
+        [HttpPatch("changeRole/{userId}")]
+        public async Task<IActionResult> ChangeRole(string token, int newCompanyId, int newDepartamentId, int newRoleTypeId, int userId)
+        {
+            if (!(await _authRepository.SessionValid(token)))
+                return WPResponse.AuthenticationInvalid();
+
+            var invokingUser = await _authRepository.GetUserByToken(token);
+            var invokingUserRole = await _authRepository.GetUserRoleByToken(token);
+
+            //check if user exists
+            if (!(await _userRepository.Exists(userId)))
+            {
+                return WPResponse.ArgumentDoesNotExist("userId");
+            }
+
+            //check if provided company exists
+            if (!(await _companyRepository.Exists(newCompanyId)))
+            {
+                return WPResponse.ArgumentDoesNotExist("newCompanyId");
+            }
+
+            //check if provided departament exists
+            if (!(await _departamentRepository.Exists(newDepartamentId)))
+            {
+                return WPResponse.ArgumentDoesNotExist("newDepartamentId");
+            }
+
+            //check if provided role exists
+            if (!Enum.IsDefined(typeof(RoleType), newRoleTypeId))
+            {
+                return WPResponse.ArgumentDoesNotExist("newRoleTypeId");
+            }
+
+            //TODO: Privilege check
+
+            var role = await _roleRepository.GetByUserId(userId);
+            role.CompanyId = newCompanyId;
+            role.DepartamentId = newDepartamentId;
+            role.Type = (RoleType)newRoleTypeId;
+
+            await _roleRepository.Update(role);
+
+            return WPResponse.Success();
+        }
+
+
+        [HttpDelete("delete/{userId}")]
+        public async Task<IActionResult> DeleteUser(string token, int userId)
+        {
+            if (!(await _authRepository.SessionValid(token)))
+                return WPResponse.AuthenticationInvalid();
+
+            var invokingUser = await _authRepository.GetUserByToken(token);
+            var invokingUserRole = await _authRepository.GetUserRoleByToken(token);
+
+            if (!(await _userRepository.Exists(userId)))
+            {
+                return WPResponse.ArgumentDoesNotExist("userId");
+            }
+
+            //TODO: Privilege check
+
+            await _userRepository.Delete(userId);
+
+            return WPResponse.Success();
         }
     }
 }

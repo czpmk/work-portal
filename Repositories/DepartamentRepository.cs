@@ -83,7 +83,7 @@ namespace WorkPortalAPI.Repositories
             }
             return user;
         }
-
+        
         public async Task<User> GrantOwnership(User user, RoleType type, int departamentId)
         {
             var role = await _context.Roles.Where(r => r.UserId == user.Id).FirstOrDefaultAsync();

@@ -40,7 +40,7 @@ namespace WorkPortalAPI.Controllers
 
             User user = foundUsers.First();
             //if password is invalid return error
-            if (Utils.GetSHA256HashOf(user.Salt + credentials.PasswordHash) != user.Password)
+            if (Utils.GetSHA256HashOf(user.Salt + credentials.Password) != user.Password)
                 return WPResponse.Custom(ReturnCode.AUTHENTICATION_INVALID);
 
             // all ok
@@ -71,7 +71,7 @@ namespace WorkPortalAPI.Controllers
                 return WPResponse.ArgumentInvalid("language");
 
             await _authRepository.CreateUser(user);
-            return await Login(new Credentials { Email = user.Email, PasswordHash = passwordRaw });
+            return await Login(new Credentials { Email = user.Email, Password = passwordRaw });
             // Shall it log in by default? If not use this line
             //return WPResponse.Success();
         }

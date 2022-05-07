@@ -87,7 +87,7 @@ namespace WorkPortalAPI.Repositories
 
         public async Task DeleteAll()
         {
-            await _context.Database.ExecuteSqlRawAsync("TRUNCATE TABLE dbo.chats");
+            await _context.Database.ExecuteSqlRawAsync("TRUNCATE TABLE dbo.chat_view_reports");
         }
     }
 }

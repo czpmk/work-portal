@@ -34,7 +34,7 @@ namespace WorkPortalAPI.Models
         public string Email { get; set; }
 
         [Required(ErrorMessage = "Password required")]
-        [StringLength(64, ErrorMessage = "Invalid length", MinimumLength = 64)]
+        [StringLength(64, ErrorMessage = "Invalid length", MinimumLength = 1)]
         [Column("password")]
         public string Password { get; set; }
 

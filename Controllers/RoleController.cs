@@ -49,5 +49,13 @@ namespace WorkPortalAPI.Controllers
             else
                 return WPResponse.ArgumentDoesNotExist("id");
         }
+
+        [HttpDelete("DEBUG/resetRoles")]
+        public async Task<IActionResult> ResetChatViewReports()
+        {
+
+            await _roleRepository.DeleteAll();
+            return WPResponse.Success();
+        }
     }
 }

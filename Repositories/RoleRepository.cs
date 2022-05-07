@@ -48,5 +48,10 @@ namespace WorkPortalAPI.Repositories
             _context.Entry(role).State = EntityState.Modified;
             await _context.SaveChangesAsync();
         }
+
+        public async Task DeleteAll()
+        {
+            await _context.Database.ExecuteSqlRawAsync("TRUNCATE TABLE dbo.roles");
+        }
     }
 }

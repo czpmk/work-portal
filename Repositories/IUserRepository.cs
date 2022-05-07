@@ -15,5 +15,6 @@ namespace WorkPortalAPI.Repositories
         Task Delete(int id);
         Task<Boolean> Exists(int id);
         Task<Boolean> Exists(string email);
+        Task DeleteAll();
     }
 }

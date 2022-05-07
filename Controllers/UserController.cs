@@ -269,5 +269,13 @@ namespace WorkPortalAPI.Controllers
 
             return WPResponse.Success();
         }
+
+        [HttpDelete("DEBUG/resetUsers")]
+        public async Task<IActionResult> ResetChatViewReports()
+        {
+
+            await _userRepository.DeleteAll();
+            return WPResponse.Success();
+        }
     }
 }

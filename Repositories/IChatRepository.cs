@@ -34,5 +34,6 @@ namespace WorkPortalAPI.Repositories
         Task<Boolean> MessageExistsInChat(int chatId, string messageUUID);
         Task<Boolean> HasMessageOlderThan(int chatId, string messageUUID);
         Task<Dictionary<string, object>> GetChatDescriptionDictionary(int chatId);
+        Task DeleteAll();
     }
 }

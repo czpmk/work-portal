@@ -100,5 +100,13 @@ namespace WorkPortalAPI.Controllers
 
             return WPResponse.Success();
         }
+
+        [HttpDelete("DEBUG/resetStatuses")]
+        public async Task<IActionResult> ResetChatViewReports()
+        {
+
+            await _statusRepository.DeleteAll();
+            return WPResponse.Success();
+        }
     }
 }

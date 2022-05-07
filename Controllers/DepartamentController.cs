@@ -135,5 +135,13 @@ namespace WorkPortalAPI.Controllers
             await _departamentRepository.GrantOwnership(newHead, RoleType.HEAD_OF_DEPARTAMENT, departament.Id);
             return WPResponse.Success();
         }
+
+        [HttpDelete("DEBUG/resetDepartaments")]
+        public async Task<IActionResult> ResetChatViewReports()
+        {
+
+            await _departamentRepository.DeleteAll();
+            return WPResponse.Success();
+        }
     }
 }

@@ -57,5 +57,10 @@ namespace WorkPortalAPI.Repositories
             status.Sort((f, s) => s.Timestamp.CompareTo(f.Timestamp));
             return status.FirstOrDefault();
         }
+
+        public async Task DeleteAll()
+        {
+            await _context.Database.ExecuteSqlRawAsync("TRUNCATE TABLE dbo.statuses");
+        }
     }
 }

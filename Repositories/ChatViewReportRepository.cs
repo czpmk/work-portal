@@ -84,5 +84,10 @@ namespace WorkPortalAPI.Repositories
         {
             return await _context.ChatViewReports.Where(c => c.UserId == userId).ToListAsync();
         }
+
+        public async Task DeleteAll()
+        {
+            await _context.Database.ExecuteSqlRawAsync("TRUNCATE TABLE dbo.chats");
+        }
     }
 }

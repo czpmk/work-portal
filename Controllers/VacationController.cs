@@ -36,5 +36,13 @@ namespace WorkPortalAPI.Controllers
             else
                 return WPResponse.ArgumentDoesNotExist("id");
         }
+
+        [HttpDelete("DEBUG/resetVacations")]
+        public async Task<IActionResult> ResetChatViewReports()
+        {
+
+            await _vacationRepository.DeleteAll();
+            return WPResponse.Success();
+        }
     }
 }

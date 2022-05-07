@@ -93,5 +93,9 @@ namespace WorkPortalAPI.Repositories
             return await _context.Users.Where(u => u.Email == email).AnyAsync();
         }
 
+        public async Task DeleteAll()
+        {
+            await _context.Database.ExecuteSqlRawAsync("TRUNCATE TABLE dbo.users");
+        }
     }
 }

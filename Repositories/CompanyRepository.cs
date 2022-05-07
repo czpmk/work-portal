@@ -88,5 +88,10 @@ namespace WorkPortalAPI.Repositories
             }
             return user;
         }
+
+        public async Task DeleteAll()
+        {
+            await _context.Database.ExecuteSqlRawAsync("TRUNCATE TABLE dbo.companies");
+        }
     }
 }

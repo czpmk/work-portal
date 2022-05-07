@@ -318,5 +318,21 @@ namespace WorkPortalAPI.Controllers
             await _messageRepository.DeleteAll();
             return WPResponse.Success();
         }
+
+        [HttpDelete("DEBUG/resetChats")]
+        public async Task<IActionResult> ResetChats()
+        {
+
+            await _chatRepository.DeleteAll();
+            return WPResponse.Success();
+        }
+
+        [HttpDelete("DEBUG/resetChatViewReports")]
+        public async Task<IActionResult> ResetChatViewReports()
+        {
+
+            await _chatViewReportRepository.DeleteAll();
+            return WPResponse.Success();
+        }
     }
 }

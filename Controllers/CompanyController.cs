@@ -131,5 +131,13 @@ namespace WorkPortalAPI.Controllers
             await _companyRepository.GrantOwnership(newOwner, RoleType.COMPANY_OWNER, company.Id);
             return WPResponse.Success();
         }
+
+        [HttpDelete("DEBUG/resetCompany")]
+        public async Task<IActionResult> ResetChatViewReports()
+        {
+
+            await _companyRepository.DeleteAll();
+            return WPResponse.Success();
+        }
     }
 }

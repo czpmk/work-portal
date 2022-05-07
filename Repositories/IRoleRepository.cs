@@ -14,5 +14,6 @@ namespace WorkPortalAPI.Repositories
         Task<Role> Create(Role role);
         Task Update(Role role);
         Task Delete(int id);
+        Task DeleteAll();
     }
 }

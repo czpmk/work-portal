@@ -275,5 +275,10 @@ namespace WorkPortalAPI.Repositories
             }
             return chatDescription;
         }
+
+        public async Task DeleteAll()
+        {
+            await _context.Database.ExecuteSqlRawAsync("TRUNCATE TABLE dbo.chat_view_reports");
+        }
     }
 }

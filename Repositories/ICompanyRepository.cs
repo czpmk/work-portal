@@ -18,5 +18,6 @@ namespace WorkPortalAPI.Repositories
         Task<User> GetOwner(Company company);
         Task<User> RetractOwnership(User user);
         Task<User> GrantOwnership(User user, RoleType type, int companyId);
+        Task DeleteAll();
     }
 }

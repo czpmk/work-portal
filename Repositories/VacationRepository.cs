@@ -43,5 +43,9 @@ namespace WorkPortalAPI.Repositories
             _context.Entry(vacation).State = EntityState.Modified;
             await _context.SaveChangesAsync();
         }
+        public async Task DeleteAll()
+        {
+            await _context.Database.ExecuteSqlRawAsync("TRUNCATE TABLE dbo.vacations");
+        }
     }
 }

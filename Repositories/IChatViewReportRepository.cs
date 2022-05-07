@@ -19,5 +19,6 @@ namespace WorkPortalAPI.Repositories
         Task<Boolean> Exists(int id);
         Task<Boolean> Exists(int userId, int chatId);
         Task<Message> GetLastSeenMessage(int chatId, int userId);
+        Task DeleteAll();
     }
 }

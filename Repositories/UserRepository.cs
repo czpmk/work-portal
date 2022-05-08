@@ -98,7 +98,7 @@ namespace WorkPortalAPI.Repositories
             await _context.Database.ExecuteSqlRawAsync("TRUNCATE TABLE dbo.users");
         }
 
-        public async Task<List<dynamic>> FindUsers(string? userNameNullable, int? companyIdNullable, int? departamentIdNullable)
+        public async Task<IEnumerable<dynamic>> FindUsers(string? userNameNullable, int? companyIdNullable, int? departamentIdNullable)
         {
             var skipFilterByUsername = userNameNullable == null;
             var skipFilterByCompany = companyIdNullable == null;
@@ -126,17 +126,6 @@ namespace WorkPortalAPI.Repositories
                                                         DepartamentId = role.Id,
                                                     }
                                                 );
-                                                //.Where(
-                                                //    u =>
-                                                //    (skipFilterByUsername || userNameList.All(x => u.FirstName.ToLower().Contains(x) || u.Surname.ToLower().Contains(x)))
-                                                //     //(userNameList.Count() == 1 && (u.FirstName.ToLower().Contains(userNameList[0]) || u.Surname.ToLower().Contains(userNameList[0]))) ||
-                                                //     //(userNameList.Count() == 2 && ((u.FirstName.ToLower().Contains(userNameList[0]) || u.Surname.ToLower().Contains(userNameList[0])) &&
-                                                //     //                               (u.FirstName.ToLower().Contains(userNameList[1]) || u.Surname.ToLower().Contains(userNameList[1])))) 
-                                                //        &&
-                                                //    (skipFilterByCompany || (u.CompanyId == companyIdNullable))
-                                                //        &&
-                                                //    (skipFilterByDepartament || (u.DepartamentId == departamentIdNullable))
-                                                //).AsQueryable();
 
             var results =
                 from u in userRolesJoined
@@ -154,12 +143,12 @@ namespace WorkPortalAPI.Repositories
                     DepartamentName = d.Name
                 };
 
-            var filteredResults = results.Where(u =>
+            var filteredResults = await results.Where(u =>
                 (skipFilterByCompany || (u.CompanyId == companyIdNullable)) &&
                 (skipFilterByDepartament || (u.DepartamentId == departamentIdNullable))
-            );
+            ).ToListAsync<dynamic>();
 
-            return await filteredResults.ToListAsync<dynamic>();
+            return filteredResults.Where(r => userNameList.All(x => r.FirstName.ToString().ToLower().Contains(x) || r.Surname.ToString().ToLower().Contains(x)));
         }
     }
 }

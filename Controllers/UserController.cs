@@ -276,7 +276,7 @@ namespace WorkPortalAPI.Controllers
             if (!(await _authRepository.SessionValid(token)))
                 return WPResponse.AuthenticationInvalid();
 
-            List<Object> result = await _userRepository.FindUsers(userName, companyId, departamentId);
+            IEnumerable<dynamic> result = await _userRepository.FindUsers(userName, companyId, departamentId);
 
             return WPResponse.Success(result);
         }

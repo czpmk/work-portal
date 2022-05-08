@@ -119,7 +119,7 @@ namespace WorkPortalAPI.Controllers
                 {
                     if (cvr.MessageUUID == null)
                     {
-                        status.Add(cvr.ChatId, new Dictionary<string, Object>() { { "upToDate", true }, { "lastMessageTimestamp", null } });
+                        status.Add(cvr.ChatId, new Dictionary<string, Object>() { { "upToDate", true }, { "timestamp", null } });
                         continue;
                     }
                     else //DEBUG - Another error in DB entries - no message found with the chatId selected, yet the chat view report points to some
@@ -143,7 +143,7 @@ namespace WorkPortalAPI.Controllers
                     //status.Add(cvr.ChatId, cvr.MessageUUID == (await _chatRepository.GetLastMessage(cvr.ChatId)).UUID);
                     status.Add(cvr.ChatId, new Dictionary<string, Object>() { 
                         { "upToDate", cvr.MessageUUID == (await _chatRepository.GetLastMessage(cvr.ChatId)).UUID }, 
-                        { "lastMessageTimestamp", lastMessage.Timestamp } 
+                        { "timestamp", lastMessage.Timestamp } 
                     });
                 }
             }

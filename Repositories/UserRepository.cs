@@ -125,7 +125,7 @@ namespace WorkPortalAPI.Repositories
                                                         CompanyId = role.Id,
                                                         DepartamentId = role.Id,
                                                     }
-                                                )
+                                                ).AsEnumerable()
                                                 .Where(
                                                     u =>
                                                     (skipFilterByUsername || userNameList.All(x => u.FirstName.ToLower().Contains(x) || u.Surname.ToLower().Contains(x)))

@@ -112,23 +112,6 @@ namespace WorkPortalAPI.Repositories
                 filterByUserName = userNameList.Count() == 0;
             }
 
-
-
-            //var usersRolesJoinedQuery = _context.Users.Join(
-            //    _context.Roles,
-            //    user => user.Id,
-            //    role => role.UserId,
-            //    (user, role) => new
-            //    {
-            //        Id = user.Id,
-            //        FirstName = user.FirstName,
-            //        Surname = user.Surname,
-            //        Email = user.Email,
-            //        CompanyId = role.CompanyId,
-            //        DepartamentId = role.DepartamentId
-            //    }
-            //    );
-
             // TODO: find by REGEX
             Func<string, string, bool> checkUserName =
                 (firstName, lastName) =>
@@ -174,12 +157,6 @@ namespace WorkPortalAPI.Repositories
                         return true;
                 };
 
-            //var filteredUsers = usersRolesJoinedQuery.Select(fu =>
-            //    (filterByUserName ? checkUserName(fu.FirstName.ToLower(), fu.Surname.ToLower()) : true) &&
-            //    (filterByCompanyId ? fu.CompanyId == companyIdNullable : true) &&
-            //    (filterByDepartamentId ? fu.DepartamentId == departamentIdNullable : true)
-            //);
-
             var result =
                 from u in _context.Users
                 join r in _context.Roles on u.Id equals r.UserId
@@ -197,11 +174,11 @@ namespace WorkPortalAPI.Repositories
                     DepartamentName = d.Name
                 };
 
-            return result.Where(r => 
+            return await result.Where(r => 
                             checkUserName(r.FirstName, r.Surname) && 
                             checkCompany(r.CompanyId) && 
                             checkDepartament(r.DepartamentId)
-                        ).ToList<dynamic>();
+                        ).ToListAsync<dynamic>();
         }
     }
 }

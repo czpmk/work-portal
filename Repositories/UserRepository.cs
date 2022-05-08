@@ -100,16 +100,16 @@ namespace WorkPortalAPI.Repositories
 
         public async Task<List<dynamic>> FindUsers(string? userNameNullable, int? companyIdNullable, int? departamentIdNullable)
         {
-            var filterByUserName = userNameNullable != null;
-            var filterByCompanyId = companyIdNullable != null;
-            var filterByDepartamentId = departamentIdNullable != null;
+            var skipFilterByUsername = userNameNullable == null;
+            var skipFilterByCompany = companyIdNullable == null;
+            var skipFilterByDepartament = departamentIdNullable == null;
 
             var userNameList = new List<string>();
-            if (filterByUserName)
+            if (!skipFilterByUsername)
             {
                 userNameList = userNameNullable.Split(' ').Select(x => x.Trim().ToLower()).Where(x => x.Length != 0).ToList();
                 // do not filter by user name if the arguments list is empty (e.g. whitespaces provided)
-                filterByUserName = userNameList.Count() == 0;
+                skipFilterByUsername = userNameList.Count() == 0;
             }
 
             var userRolesJoined = _context.Users.Join(
@@ -128,16 +128,14 @@ namespace WorkPortalAPI.Repositories
                                                 )
                                                 .Where(
                                                     u =>
-                                                    (!filterByUserName ||
-                                                    (userNameList.Count() == 1 ?
-                                                        (u.FirstName.Contains(userNameList[0]) || u.Surname.Contains(userNameList[0])) :
-                                                    userNameList.Count() == 2 ?
-                                                        (u.FirstName.Contains(userNameList[0]) || u.Surname.Contains(userNameList[0])) &&
-                                                        (u.FirstName.Contains(userNameList[1]) || u.Surname.Contains(userNameList[1])) : false))
+                                                    (skipFilterByUsername || userNameList.All(x => u.FirstName.ToLower().Contains(x) || u.Surname.ToLower().Contains(x)))
+                                                     //(userNameList.Count() == 1 && (u.FirstName.ToLower().Contains(userNameList[0]) || u.Surname.ToLower().Contains(userNameList[0]))) ||
+                                                     //(userNameList.Count() == 2 && ((u.FirstName.ToLower().Contains(userNameList[0]) || u.Surname.ToLower().Contains(userNameList[0])) &&
+                                                     //                               (u.FirstName.ToLower().Contains(userNameList[1]) || u.Surname.ToLower().Contains(userNameList[1])))) 
                                                         &&
-                                                    (!filterByCompanyId || (u.CompanyId == companyIdNullable))
+                                                    (skipFilterByCompany || (u.CompanyId == companyIdNullable))
                                                         &&
-                                                    (!filterByDepartamentId || (u.DepartamentId == departamentIdNullable))
+                                                    (skipFilterByDepartament || (u.DepartamentId == departamentIdNullable))
                                                 );
 
             var result =

@@ -157,11 +157,30 @@ namespace WorkPortalAPI.Repositories
                         return true;
                 };
 
+            var userRolesJoined = _context.Users.Join(
+                    _context.Roles,
+                    user => user.Id,
+                    role => role.Id,
+                    (user, role) => new 
+                    {
+                        Id = user.Id,
+                        FirstName = user.FirstName,
+                        Surname = user.Surname,
+                        Email = user.Email,
+                        CompanyId = role.Id,
+                        DepartamentId = role.Id,
+                    }
+                                                ).Where(
+                    u =>
+                    checkUserName(u.FirstName, u.Surname) &&
+                    checkCompany(u.CompanyId) &&
+                    checkDepartament(u.DepartamentId)
+                );
+
             var result =
-                from u in _context.Users
-                join r in _context.Roles on u.Id equals r.UserId
-                join c in _context.Companies on r.CompanyId equals c.Id
-                join d in _context.Departaments on r.DepartamentId equals d.Id
+                from u in userRolesJoined
+                join c in _context.Companies on u.CompanyId equals c.Id
+                join d in _context.Departaments on u.DepartamentId equals d.Id
                 select new
                 {
                     Id = u.Id,
@@ -174,11 +193,7 @@ namespace WorkPortalAPI.Repositories
                     DepartamentName = d.Name
                 };
 
-            return await result.Where(r => 
-                            checkUserName(r.FirstName, r.Surname) && 
-                            checkCompany(r.CompanyId) && 
-                            checkDepartament(r.DepartamentId)
-                        ).ToListAsync<dynamic>();
+            return await result.ToListAsync<dynamic>();
         }
     }
 }

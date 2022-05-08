@@ -138,7 +138,7 @@ namespace WorkPortalAPI.Repositories
                                                 //    (skipFilterByDepartament || (u.DepartamentId == departamentIdNullable))
                                                 //).AsQueryable();
 
-            var result =
+            var results =
                 from u in userRolesJoined
                 join c in _context.Companies on u.CompanyId equals c.Id
                 join d in _context.Departaments on u.DepartamentId equals d.Id
@@ -154,7 +154,12 @@ namespace WorkPortalAPI.Repositories
                     DepartamentName = d.Name
                 };
 
-            return await result.ToListAsync<dynamic>();
+            var filteredResults = results.Where(u =>
+                (skipFilterByCompany || (u.CompanyId == companyIdNullable)) &&
+                (skipFilterByDepartament || (u.DepartamentId == departamentIdNullable))
+            );
+
+            return await filteredResults.ToListAsync<dynamic>();
         }
     }
 }

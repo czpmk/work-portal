@@ -158,24 +158,36 @@ namespace WorkPortalAPI.Repositories
                 };
 
             var userRolesJoined = _context.Users.Join(
-                    _context.Roles,
-                    user => user.Id,
-                    role => role.Id,
-                    (user, role) => new 
-                    {
-                        Id = user.Id,
-                        FirstName = user.FirstName,
-                        Surname = user.Surname,
-                        Email = user.Email,
-                        CompanyId = role.Id,
-                        DepartamentId = role.Id,
-                    }
-                                                ).Where(
-                    u =>
-                    checkUserName(u.FirstName, u.Surname) &&
-                    checkCompany(u.CompanyId) &&
-                    checkDepartament(u.DepartamentId)
-                );
+                                                    _context.Roles,
+                                                    user => user.Id,
+                                                    role => role.Id,
+                                                    (user, role) => new
+                                                    {
+                                                        Id = user.Id,
+                                                        FirstName = user.FirstName,
+                                                        Surname = user.Surname,
+                                                        Email = user.Email,
+                                                        CompanyId = role.Id,
+                                                        DepartamentId = role.Id,
+                                                    }
+                                                )
+                                                .Where(
+                                                    u =>
+                                                    !filterByUserName ||
+                                                    (userNameList.Count() == 1 ?
+                                                        (u.FirstName.Contains(userNameList[0]) || u.Surname.Contains(userNameList[0])) :
+                                                    userNameList.Count() == 2 ?
+                                                        (u.FirstName.Contains(userNameList[0]) || u.Surname.Contains(userNameList[0])) &&
+                                                        (u.FirstName.Contains(userNameList[1]) || u.Surname.Contains(userNameList[1])) : false) &&
+                                                    !filterByCompanyId || (u.CompanyId == companyIdNullable) &&
+                                                    !filterByDepartamentId || (u.DepartamentId == departamentIdNullable)
+                                                );
+            //var result = userRolesJoined.ToListAsync()
+            //    .Where(
+            //                                        u =>  checkUserName(u.FirstName, u.Surname) &&
+            //                                              checkCompany(u.CompanyId) == true &&
+            //                                              checkDepartament(u.DepartamentId) == true
+            //                                   );
 
             var result =
                 from u in userRolesJoined

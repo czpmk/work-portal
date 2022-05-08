@@ -125,18 +125,18 @@ namespace WorkPortalAPI.Repositories
                                                         CompanyId = role.Id,
                                                         DepartamentId = role.Id,
                                                     }
-                                                ).AsEnumerable()
-                                                .Where(
-                                                    u =>
-                                                    (skipFilterByUsername || userNameList.All(x => u.FirstName.ToLower().Contains(x) || u.Surname.ToLower().Contains(x)))
-                                                     //(userNameList.Count() == 1 && (u.FirstName.ToLower().Contains(userNameList[0]) || u.Surname.ToLower().Contains(userNameList[0]))) ||
-                                                     //(userNameList.Count() == 2 && ((u.FirstName.ToLower().Contains(userNameList[0]) || u.Surname.ToLower().Contains(userNameList[0])) &&
-                                                     //                               (u.FirstName.ToLower().Contains(userNameList[1]) || u.Surname.ToLower().Contains(userNameList[1])))) 
-                                                        &&
-                                                    (skipFilterByCompany || (u.CompanyId == companyIdNullable))
-                                                        &&
-                                                    (skipFilterByDepartament || (u.DepartamentId == departamentIdNullable))
                                                 );
+                                                //.Where(
+                                                //    u =>
+                                                //    (skipFilterByUsername || userNameList.All(x => u.FirstName.ToLower().Contains(x) || u.Surname.ToLower().Contains(x)))
+                                                //     //(userNameList.Count() == 1 && (u.FirstName.ToLower().Contains(userNameList[0]) || u.Surname.ToLower().Contains(userNameList[0]))) ||
+                                                //     //(userNameList.Count() == 2 && ((u.FirstName.ToLower().Contains(userNameList[0]) || u.Surname.ToLower().Contains(userNameList[0])) &&
+                                                //     //                               (u.FirstName.ToLower().Contains(userNameList[1]) || u.Surname.ToLower().Contains(userNameList[1])))) 
+                                                //        &&
+                                                //    (skipFilterByCompany || (u.CompanyId == companyIdNullable))
+                                                //        &&
+                                                //    (skipFilterByDepartament || (u.DepartamentId == departamentIdNullable))
+                                                //).AsQueryable();
 
             var result =
                 from u in userRolesJoined

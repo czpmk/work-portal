@@ -185,9 +185,6 @@ namespace WorkPortalAPI.Repositories
                 join r in _context.Roles on u.Id equals r.UserId
                 join c in _context.Companies on r.CompanyId equals c.Id
                 join d in _context.Departaments on r.DepartamentId equals d.Id
-                where checkUserName(u.FirstName, u.Surname) == true &&
-                      checkCompany(c.Id) == true &&
-                      checkDepartament(d.Id) == true
                 select new
                 {
                     Id = u.Id,
@@ -200,7 +197,11 @@ namespace WorkPortalAPI.Repositories
                     DepartamentName = d.Name
                 };
 
-            return result.ToList<dynamic>();
+            return result.Where(r => 
+                            checkUserName(r.FirstName, r.Surname) && 
+                            checkCompany(r.CompanyId) && 
+                            checkDepartament(r.DepartamentId)
+                        ).ToList<dynamic>();
         }
     }
 }

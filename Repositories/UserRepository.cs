@@ -24,7 +24,7 @@ namespace WorkPortalAPI.Repositories
         public async Task Delete(int id)
         {
             var chatViewReports = await _context.ChatViewReports.Where(cvr => cvr.UserId == id).ToListAsync();
-            foreach(var cvr in chatViewReports)
+            foreach (var cvr in chatViewReports)
             {
                 _context.ChatViewReports.Remove(cvr);
             }
@@ -96,6 +96,111 @@ namespace WorkPortalAPI.Repositories
         public async Task DeleteAll()
         {
             await _context.Database.ExecuteSqlRawAsync("TRUNCATE TABLE dbo.users");
+        }
+
+        public async Task<List<dynamic>> FindUsers(string? userNameNullable, int? companyIdNullable, int? departamentIdNullable)
+        {
+            var filterByUserName = userNameNullable != null;
+            var filterByCompanyId = companyIdNullable != null;
+            var filterByDepartamentId = departamentIdNullable != null;
+
+            var userNameList = new List<string>();
+            if (filterByUserName)
+            {
+                userNameList = userNameNullable.Split(' ').Select(x => x.Trim().ToLower()).Where(x => x.Length != 0).ToList();
+                // do not filter by user name if the arguments list is empty (e.g. whitespaces provided)
+                filterByUserName = userNameList.Count() == 0;
+            }
+
+
+
+            //var usersRolesJoinedQuery = _context.Users.Join(
+            //    _context.Roles,
+            //    user => user.Id,
+            //    role => role.UserId,
+            //    (user, role) => new
+            //    {
+            //        Id = user.Id,
+            //        FirstName = user.FirstName,
+            //        Surname = user.Surname,
+            //        Email = user.Email,
+            //        CompanyId = role.CompanyId,
+            //        DepartamentId = role.DepartamentId
+            //    }
+            //    );
+
+            // TODO: find by REGEX
+            Func<string, string, bool> checkUserName =
+                (firstName, lastName) =>
+                {
+                    if (filterByUserName)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        switch (userNameList.Count())
+                        {
+                            case 1:             // check if argument in first or last name
+                                return firstName.Contains(userNameList[0]) || lastName.Contains(userNameList[0]);
+
+                            case 2:             // check if both arguments are in first or last name (not both in the same one)
+                                return (firstName.Contains(userNameList[0]) || lastName.Contains(userNameList[0])) &&
+                                       (firstName.Contains(userNameList[1]) || lastName.Contains(userNameList[1]));
+
+                            case 3:             // always false if more then 2 arguments provided
+                                return false;
+                            default:
+                                return false;
+                        }
+                    }
+                };
+
+            Func<int, bool> checkCompany =
+                (companyId) =>
+                {
+                    if (filterByCompanyId)
+                        return companyId == companyIdNullable;
+                    else
+                        return true;
+                };
+
+            Func<int, bool> checkDepartament =
+                (departamentId) =>
+                {
+                    if (filterByDepartamentId)
+                        return departamentId == departamentIdNullable;
+                    else
+                        return true;
+                };
+
+            //var filteredUsers = usersRolesJoinedQuery.Select(fu =>
+            //    (filterByUserName ? checkUserName(fu.FirstName.ToLower(), fu.Surname.ToLower()) : true) &&
+            //    (filterByCompanyId ? fu.CompanyId == companyIdNullable : true) &&
+            //    (filterByDepartamentId ? fu.DepartamentId == departamentIdNullable : true)
+            //);
+
+            var result =
+                from u in _context.Users
+                join r in _context.Roles on u.Id equals r.UserId
+                join c in _context.Companies on r.CompanyId equals c.Id
+                join d in _context.Departaments on r.DepartamentId equals d.Id
+                where checkUserName(u.FirstName, u.Surname) == true &&
+                      checkCompany(c.Id) == true &&
+                      checkDepartament(d.Id) == true
+                select new
+                {
+                    Id = u.Id,
+                    FirstName = u.FirstName,
+                    Surname = u.Surname,
+                    Email = u.Email,
+                    CompanyId = c.Id,
+                    CompanyName = c.Name,
+                    DepartamentId = d.Id,
+                    DepartamentName = d.Name
+                };
+
+            return result.ToList<dynamic>();
         }
     }
 }

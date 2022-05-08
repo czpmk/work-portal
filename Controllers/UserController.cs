@@ -157,7 +157,7 @@ namespace WorkPortalAPI.Controllers
         }
 
         [HttpPatch("edit/{userId}")]
-        public async Task<IActionResult> EditUser(UserInfo userEdition, string token, int userId)
+        public async Task<IActionResult> EditUser(UserInfo newUserInfo, string token, int userId)
         {
             if (!(await _authRepository.SessionValid(token)))
                 return WPResponse.AuthenticationInvalid();
@@ -171,34 +171,34 @@ namespace WorkPortalAPI.Controllers
                 return WPResponse.ArgumentDoesNotExist("userId");
             }
 
-            var userToEdit = await _userRepository.Get(userId);
+            var oldUserInfo = await _userRepository.Get(userId);
 
             //set new values
-            if (userEdition.Email != null && !userToEdit.Email.Equals(userEdition.Email))
+            if (newUserInfo.Email != null && !oldUserInfo.Email.Equals(newUserInfo.Email))
             {
-                userToEdit.Email = userEdition.Email;
+                oldUserInfo.Email = newUserInfo.Email;
             }
-            if (userEdition.FirstName != null && !userToEdit.FirstName.Equals(userEdition.FirstName))
+            if (newUserInfo.FirstName != null && !oldUserInfo.FirstName.Equals(newUserInfo.FirstName))
             {
-                userToEdit.FirstName = userEdition.FirstName;
+                oldUserInfo.FirstName = newUserInfo.FirstName;
             }
-            if (userEdition.Surname != null && !userToEdit.Surname.Equals(userEdition.Surname))
+            if (newUserInfo.Surname != null && !oldUserInfo.Surname.Equals(newUserInfo.Surname))
             {
-                userToEdit.Surname = userEdition.Surname;
+                oldUserInfo.Surname = newUserInfo.Surname;
             }
-            if (userEdition.IsAdmin != null && !userToEdit.IsAdmin.Equals(userEdition.IsAdmin))
+            if (newUserInfo.IsAdmin != null && !oldUserInfo.IsAdmin.Equals(newUserInfo.IsAdmin))
             {
                 if (!invokingUser.IsAdmin) return WPResponse.AccessDenied("IsAdmin");
-                userToEdit.IsAdmin = userEdition.IsAdmin;
+                oldUserInfo.IsAdmin = newUserInfo.IsAdmin;
             }
-            if (userEdition.Language != null && !userToEdit.Language.Equals(userEdition.Language))
+            if (newUserInfo.Language != null && !oldUserInfo.Language.Equals(newUserInfo.Language))
             {
-                userToEdit.Language = userEdition.Language;
+                oldUserInfo.Language = newUserInfo.Language;
             }
 
             //TODO: Privilege check
 
-            await _userRepository.Update(userToEdit);
+            await _userRepository.Update(oldUserInfo);
 
             return WPResponse.Success();
         }
@@ -268,6 +268,17 @@ namespace WorkPortalAPI.Controllers
             await _userRepository.Delete(userId);
 
             return WPResponse.Success();
+        }
+
+        [HttpGet("find")]
+        public async Task<IActionResult> FindUsers(string token, string? userName, int? companyId, int? departamentId)
+        {
+            if (!(await _authRepository.SessionValid(token)))
+                return WPResponse.AuthenticationInvalid();
+
+            List<Object> result = await _userRepository.FindUsers(userName, companyId, departamentId);
+
+            return WPResponse.Success(result);
         }
 
         [HttpDelete("DEBUG/resetUsers")]

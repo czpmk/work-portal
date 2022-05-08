@@ -27,7 +27,7 @@ namespace WorkPortalAPI.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(Credentials credentials)
         {
-            //find user from credentials
+            //find user by credentials
             List<User> foundUsers = await _authRepository.GetUsersByEmail(credentials.Email);
 
             //if more than one user found

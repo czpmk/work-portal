@@ -69,7 +69,7 @@ namespace WorkPortalAPI.Controllers
             var invokingUserRole = await _authRepository.GetUserRoleByToken(token);
 
             user.Salt = Guid.NewGuid().ToString().Replace("-", "");
-            user.Password = Utils.GetSHA256HashOf(user.Password + user.Salt);
+            user.Password = Utils.GetSHA256HashOf(user.Salt + user.Password);
 
             //check if invoking user has privilege to create administrator account
             if ((!invokingUser.IsAdmin) && user.IsAdmin)

@@ -112,51 +112,6 @@ namespace WorkPortalAPI.Repositories
                 filterByUserName = userNameList.Count() == 0;
             }
 
-            // TODO: find by REGEX
-            Func<string, string, bool> checkUserName =
-                (firstName, lastName) =>
-                {
-                    if (filterByUserName)
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        switch (userNameList.Count())
-                        {
-                            case 1:             // check if argument in first or last name
-                                return firstName.Contains(userNameList[0]) || lastName.Contains(userNameList[0]);
-
-                            case 2:             // check if both arguments are in first or last name (not both in the same one)
-                                return (firstName.Contains(userNameList[0]) || lastName.Contains(userNameList[0])) &&
-                                       (firstName.Contains(userNameList[1]) || lastName.Contains(userNameList[1]));
-
-                            case 3:             // always false if more then 2 arguments provided
-                                return false;
-                            default:
-                                return false;
-                        }
-                    }
-                };
-
-            Func<int, bool> checkCompany =
-                (companyId) =>
-                {
-                    if (filterByCompanyId)
-                        return companyId == companyIdNullable;
-                    else
-                        return true;
-                };
-
-            Func<int, bool> checkDepartament =
-                (departamentId) =>
-                {
-                    if (filterByDepartamentId)
-                        return departamentId == departamentIdNullable;
-                    else
-                        return true;
-                };
-
             var userRolesJoined = _context.Users.Join(
                                                     _context.Roles,
                                                     user => user.Id,
@@ -173,21 +128,17 @@ namespace WorkPortalAPI.Repositories
                                                 )
                                                 .Where(
                                                     u =>
-                                                    !filterByUserName ||
+                                                    (!filterByUserName ||
                                                     (userNameList.Count() == 1 ?
                                                         (u.FirstName.Contains(userNameList[0]) || u.Surname.Contains(userNameList[0])) :
                                                     userNameList.Count() == 2 ?
                                                         (u.FirstName.Contains(userNameList[0]) || u.Surname.Contains(userNameList[0])) &&
-                                                        (u.FirstName.Contains(userNameList[1]) || u.Surname.Contains(userNameList[1])) : false) &&
-                                                    !filterByCompanyId || (u.CompanyId == companyIdNullable) &&
-                                                    !filterByDepartamentId || (u.DepartamentId == departamentIdNullable)
+                                                        (u.FirstName.Contains(userNameList[1]) || u.Surname.Contains(userNameList[1])) : false))
+                                                        &&
+                                                    (!filterByCompanyId || (u.CompanyId == companyIdNullable))
+                                                        &&
+                                                    (!filterByDepartamentId || (u.DepartamentId == departamentIdNullable))
                                                 );
-            //var result = userRolesJoined.ToListAsync()
-            //    .Where(
-            //                                        u =>  checkUserName(u.FirstName, u.Surname) &&
-            //                                              checkCompany(u.CompanyId) == true &&
-            //                                              checkDepartament(u.DepartamentId) == true
-            //                                   );
 
             var result =
                 from u in userRolesJoined

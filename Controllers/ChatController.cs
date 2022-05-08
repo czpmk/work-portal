@@ -96,34 +96,33 @@ namespace WorkPortalAPI.Controllers
                 return WPResponse.AuthenticationInvalid();
 
             var user = await _authRepository.GetUserByToken(token);
-
             var status = new Dictionary<int, Object>();
-
             var chatViewReports = await _chatViewReportRepository.GetReportsForUser(user.Id);
+
             // DEBUG WARNING MESSAGES ahead
-            var i = -10000000;
+            var i = -10000000; // DEBUG - remove when chat creating and such is OK
             foreach (var cvr in chatViewReports)
             {
-                if (cvr.ChatId == null) // DEBUG - remove when it's debugged
+                if (cvr.ChatId == null) // DEBUG - remove when chat creating and such is OK
                 {
                     status.Add(cvr.ChatId, String.Format("Invalid Chat View Repository entry {0}: ChatId = null", cvr.Id));
                     continue;
                 }
-                if (!(await _chatRepository.Exists(cvr.ChatId))) // The chat pointed to by Chat View Repository does not exist
+                if (!(await _chatRepository.Exists(cvr.ChatId))) // DEBUG - The chat pointed to by Chat View Repository does not exist - remove when chat creating and such is OK
                 {
                     status.Add(cvr.ChatId, String.Format("Invalid Chat View Repository entry {0}: The chat {1} does not exist", cvr.Id, cvr.ChatId));
                     continue;
                 }
 
                 var lastMessage = await _chatRepository.GetLastMessage(cvr.ChatId);
-                if (lastMessage == null)
+                if (lastMessage == null) // the chat is empty (no messages)
                 {
                     if (cvr.MessageUUID == null)
                     {
-                        status.Add(cvr.ChatId, true);
+                        status.Add(cvr.ChatId, new Dictionary<string, Object>() { { "upToDate", true }, { "lastMessageTimestamp", null } });
                         continue;
                     }
-                    else // Another error in DB entries
+                    else //DEBUG - Another error in DB entries - no message found with the chatId selected, yet the chat view report points to some
                     {
                         cvr.MessageUUID = null;
                         await _chatViewReportRepository.Update(cvr);
@@ -133,15 +132,19 @@ namespace WorkPortalAPI.Controllers
                     }
                 }
 
-                if (status.Keys.Contains(cvr.ChatId)) // ... and another...
+                if (status.Keys.Contains(cvr.ChatId)) // DEBUG - ... and another...
                 {
-                    var mess = String.Format("WARNING: Duplicate chatId ({0}) found with message UUID {1}", cvr.ChatId, cvr.MessageUUID);
+                    var mess = String.Format("WARNING: Duplicate ChatViewReport with chatId ({0}) found with message UUID {1}", cvr.ChatId, cvr.MessageUUID);
                     status.Add(i, mess);
                     i++;
                 }
                 else
                 {
-                    status.Add(cvr.ChatId, cvr.MessageUUID == (await _chatRepository.GetLastMessage(cvr.ChatId)).UUID);
+                    //status.Add(cvr.ChatId, cvr.MessageUUID == (await _chatRepository.GetLastMessage(cvr.ChatId)).UUID);
+                    status.Add(cvr.ChatId, new Dictionary<string, Object>() { 
+                        { "upToDate", cvr.MessageUUID == (await _chatRepository.GetLastMessage(cvr.ChatId)).UUID }, 
+                        { "lastMessageTimestamp", lastMessage.Timestamp } 
+                    });
                 }
             }
             return WPResponse.Success(status);
@@ -168,21 +171,24 @@ namespace WorkPortalAPI.Controllers
             }
 
             var lastMessage = await _chatRepository.GetLastMessage(chatId);
+            var status = new Dictionary<string, object>();
             if (lastMessage == null)
             {
-                if (cvr.MessageUUID == null)
-                {
-                    return WPResponse.Success(true);
-                }
-                else // fix db entry
+                if (cvr.MessageUUID != null) // DEBUG - no messages found for chat, yet chat view report points to some - REMOVE
                 {
                     cvr.MessageUUID = null;
                     await _chatViewReportRepository.Update(cvr);
-                    return WPResponse.Success(true);
                 }
+                status.Add("upToDate", true);
+                status.Add("timestamp", null);
+            }
+            else
+            {
+                status.Add("upToDate", lastMessage.UUID == cvr.MessageUUID);
+                status.Add("timestamp", lastMessage.Timestamp);
             }
 
-            return WPResponse.Success(lastMessage.UUID == cvr.MessageUUID);
+            return WPResponse.Success(status);
         }
 
         [HttpGet("olderMessageExists")]

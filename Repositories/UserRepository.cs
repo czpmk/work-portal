@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace WorkPortalAPI.Repositories
 {
@@ -115,7 +116,7 @@ namespace WorkPortalAPI.Repositories
             var userRolesJoined = _context.Users.Join(
                                                     _context.Roles,
                                                     user => user.Id,
-                                                    role => role.Id,
+                                                    role => role.UserId,
                                                     (user, role) => new
                                                     {
                                                         Id = user.Id,
@@ -148,7 +149,12 @@ namespace WorkPortalAPI.Repositories
                 (skipFilterByDepartament || (u.DepartamentId == departamentIdNullable))
             ).ToListAsync<dynamic>();
 
-            return filteredResults.Where(r => userNameList.All(x => r.FirstName.ToString().ToLower().Contains(x) || r.Surname.ToString().ToLower().Contains(x)));
+            if (skipFilterByCompany)
+                return filteredResults;
+
+            else
+                return filteredResults.Where(r => userNameList.All(x => r.FirstName.ToString().ToLower().Contains(x) ||
+                                                                        r.Surname.ToString().ToLower().Contains(x)));
         }
     }
 }

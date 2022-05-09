@@ -113,34 +113,6 @@ namespace WorkPortalAPI.Repositories
                 skipFilterByUsername = userNameList.Count() == 0;
             }
 
-            //var userRolesJoined = _context.Users.Join(
-            //                                        _context.Roles,
-            //                                        user => user.Id,
-            //                                        role => role.UserId,
-            //                                        (user, role) => new
-            //                                        {
-            //                                            Id = user.Id,
-            //                                            FirstName = user.FirstName,
-            //                                            Surname = user.Surname,
-            //                                            Email = user.Email,
-            //                                            CompanyId = role.Id,
-            //                                            DepartamentId = role.Id,
-            //                                        }
-            //                                    );
-
-            //var results =
-            //    from u in _context.Users
-            //    join r in _context.Roles on u.Id equals r.UserId
-            //    select new
-            //    {
-            //        Id = u.Id,
-            //        FirstName = u.FirstName,
-            //        Surname = u.Surname,
-            //        Email = u.Email,
-            //        CompanyId = r.Id,
-            //        DepartamentId = r.Id,
-            //    };
-
             var results =
                 from u in _context.Users
                 join r in _context.Roles on u.Id equals r.UserId
@@ -157,8 +129,6 @@ namespace WorkPortalAPI.Repositories
                     DepartamentId = d.Id,
                     DepartamentName = d.Name
                 };
-
-            //var results = userRolesJoined;
 
             if (!skipFilterByCompany)
                 results = results.Where(u => u.CompanyId == companyIdNullable);

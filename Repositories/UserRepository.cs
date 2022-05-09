@@ -128,33 +128,35 @@ namespace WorkPortalAPI.Repositories
                                                     }
                                                 );
 
-            //var results =
-            //    from u in userRolesJoined
-            //    join c in _context.Companies on u.CompanyId equals c.Id
-            //    join d in _context.Departaments on u.DepartamentId equals d.Id
-            //    select new
-            //    {
-            //        Id = u.Id,
-            //        FirstName = u.FirstName,
-            //        Surname = u.Surname,
-            //        Email = u.Email,
-            //        CompanyId = c.Id,
-            //        CompanyName = c.Name,
-            //        DepartamentId = d.Id,
-            //        DepartamentName = d.Name
-            //    };
+            var results =
+                from u in userRolesJoined
+                join c in _context.Companies on u.CompanyId equals c.Id
+                join d in _context.Departaments on u.DepartamentId equals d.Id
+                select new
+                {
+                    Id = u.Id,
+                    FirstName = u.FirstName,
+                    Surname = u.Surname,
+                    Email = u.Email,
+                    CompanyId = c.Id,
+                    CompanyName = c.Name,
+                    DepartamentId = d.Id,
+                    DepartamentName = d.Name
+                };
 
-            var filteredResults = await userRolesJoined.Where(u =>
-                (skipFilterByCompany || (u.CompanyId == companyIdNullable)) &&
-                (skipFilterByDepartament || (u.DepartamentId == departamentIdNullable))
-            ).ToListAsync<dynamic>();
+            if (!skipFilterByCompany)
+                results = results.Where(u => u.CompanyId == companyIdNullable);
 
-            if (skipFilterByCompany)
-                return filteredResults;
+            if (!skipFilterByDepartament)
+                results = results.Where(u => u.DepartamentId == departamentIdNullable);
+
+            if (skipFilterByUsername)
+                return await results.ToListAsync<dynamic>();
 
             else
-                return filteredResults.Where(r => userNameList.All(x => r.FirstName.ToString().ToLower().Contains(x) ||
-                                                                        r.Surname.ToString().ToLower().Contains(x)));
+                return (await results.ToListAsync<dynamic>()).Where(r => 
+                                        userNameList.All(x => r.FirstName.ToString().ToLower().Contains(x) ||
+                                                              r.Surname.ToString().ToLower().Contains(x)));
         }
     }
 }

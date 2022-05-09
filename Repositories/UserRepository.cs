@@ -113,22 +113,35 @@ namespace WorkPortalAPI.Repositories
                 skipFilterByUsername = userNameList.Count() == 0;
             }
 
-            var userRolesJoined = _context.Users.Join(
-                                                    _context.Roles,
-                                                    user => user.Id,
-                                                    role => role.UserId,
-                                                    (user, role) => new
-                                                    {
-                                                        Id = user.Id,
-                                                        FirstName = user.FirstName,
-                                                        Surname = user.Surname,
-                                                        Email = user.Email,
-                                                        CompanyId = role.Id,
-                                                        DepartamentId = role.Id,
-                                                    }
-                                                );
+            //var userRolesJoined = _context.Users.Join(
+            //                                        _context.Roles,
+            //                                        user => user.Id,
+            //                                        role => role.UserId,
+            //                                        (user, role) => new
+            //                                        {
+            //                                            Id = user.Id,
+            //                                            FirstName = user.FirstName,
+            //                                            Surname = user.Surname,
+            //                                            Email = user.Email,
+            //                                            CompanyId = role.Id,
+            //                                            DepartamentId = role.Id,
+            //                                        }
+            //                                    );
 
-            //var results =
+            var results =
+                from u in _context.Users
+                join r in _context.Roles on u.Id equals r.UserId
+                select new
+                {
+                    Id = u.Id,
+                    FirstName = u.FirstName,
+                    Surname = u.Surname,
+                    Email = u.Email,
+                    CompanyId = r.Id,
+                    DepartamentId = r.Id,
+                };
+
+            //results =
             //    from u in userRolesJoined
             //    join c in _context.Companies on u.CompanyId equals c.Id
             //    join d in _context.Departaments on u.DepartamentId equals d.Id
@@ -144,7 +157,7 @@ namespace WorkPortalAPI.Repositories
             //        DepartamentName = d.Name
             //    };
 
-            var results = userRolesJoined;
+            //var results = userRolesJoined;
 
             if (!skipFilterByCompany)
                 results = results.Where(u => u.CompanyId == companyIdNullable);
@@ -156,7 +169,7 @@ namespace WorkPortalAPI.Repositories
                 return await results.ToListAsync<dynamic>();
 
             else
-                return (await results.ToListAsync<dynamic>()).Where(r => 
+                return (await results.ToListAsync<dynamic>()).Where(r =>
                                         userNameList.All(x => r.FirstName.ToString().ToLower().Contains(x) ||
                                                               r.Surname.ToString().ToLower().Contains(x)));
         }

@@ -128,34 +128,35 @@ namespace WorkPortalAPI.Repositories
             //                                        }
             //                                    );
 
-            var results =
-                from u in _context.Users
-                join r in _context.Roles on u.Id equals r.UserId
-                select new
-                {
-                    Id = u.Id,
-                    FirstName = u.FirstName,
-                    Surname = u.Surname,
-                    Email = u.Email,
-                    CompanyId = r.Id,
-                    DepartamentId = r.Id,
-                };
-
-            //results =
-            //    from u in userRolesJoined
-            //    join c in _context.Companies on u.CompanyId equals c.Id
-            //    join d in _context.Departaments on u.DepartamentId equals d.Id
+            //var results =
+            //    from u in _context.Users
+            //    join r in _context.Roles on u.Id equals r.UserId
             //    select new
             //    {
             //        Id = u.Id,
             //        FirstName = u.FirstName,
             //        Surname = u.Surname,
             //        Email = u.Email,
-            //        CompanyId = c.Id,
-            //        CompanyName = c.Name,
-            //        DepartamentId = d.Id,
-            //        DepartamentName = d.Name
+            //        CompanyId = r.Id,
+            //        DepartamentId = r.Id,
             //    };
+
+            var results =
+                from u in _context.Users
+                join r in _context.Roles on u.Id equals r.UserId
+                join c in _context.Companies on r.CompanyId equals c.Id
+                join d in _context.Departaments on r.DepartamentId equals d.Id
+                select new
+                {
+                    Id = u.Id,
+                    FirstName = u.FirstName,
+                    Surname = u.Surname,
+                    Email = u.Email,
+                    CompanyId = c.Id,
+                    CompanyName = c.Name,
+                    DepartamentId = d.Id,
+                    DepartamentName = d.Name
+                };
 
             //var results = userRolesJoined;
 

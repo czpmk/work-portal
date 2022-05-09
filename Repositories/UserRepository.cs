@@ -128,21 +128,23 @@ namespace WorkPortalAPI.Repositories
                                                     }
                                                 );
 
-            var results =
-                from u in userRolesJoined
-                join c in _context.Companies on u.CompanyId equals c.Id
-                join d in _context.Departaments on u.DepartamentId equals d.Id
-                select new
-                {
-                    Id = u.Id,
-                    FirstName = u.FirstName,
-                    Surname = u.Surname,
-                    Email = u.Email,
-                    CompanyId = c.Id,
-                    CompanyName = c.Name,
-                    DepartamentId = d.Id,
-                    DepartamentName = d.Name
-                };
+            //var results =
+            //    from u in userRolesJoined
+            //    join c in _context.Companies on u.CompanyId equals c.Id
+            //    join d in _context.Departaments on u.DepartamentId equals d.Id
+            //    select new
+            //    {
+            //        Id = u.Id,
+            //        FirstName = u.FirstName,
+            //        Surname = u.Surname,
+            //        Email = u.Email,
+            //        CompanyId = c.Id,
+            //        CompanyName = c.Name,
+            //        DepartamentId = d.Id,
+            //        DepartamentName = d.Name
+            //    };
+
+            var results = userRolesJoined;
 
             if (!skipFilterByCompany)
                 results = results.Where(u => u.CompanyId == companyIdNullable);

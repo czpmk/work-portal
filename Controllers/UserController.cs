@@ -18,14 +18,20 @@ namespace WorkPortalAPI.Controllers
         private readonly IRoleRepository _roleRepository;
         private readonly ICompanyRepository _companyRepository;
         private readonly IDepartmentRepository _departamentRepository;
+        private readonly IChatViewReportRepository _chatViewReportRepository;
+        private readonly IChatRepository _chatRepository;
 
-        public UserController(IAuthRepository authRepository, IUserRepository userRepository, IRoleRepository roleRepository, ICompanyRepository companyRepository, IDepartmentRepository departamentRepository)
+        public UserController(IAuthRepository authRepository, IUserRepository userRepository, IRoleRepository roleRepository, 
+                                ICompanyRepository companyRepository, IDepartmentRepository departamentRepository,
+                                IChatViewReportRepository chatViewReportRepository, IChatRepository chatRepository)
         {
             this._userRepository = userRepository;
             this._authRepository = authRepository;
             this._roleRepository = roleRepository;
             this._companyRepository = companyRepository;
             this._departamentRepository = departamentRepository;
+            this._chatViewReportRepository = chatViewReportRepository;
+            this._chatRepository = chatRepository;
         }
 
         [HttpGet("DEBUG")]
@@ -239,6 +245,34 @@ namespace WorkPortalAPI.Controllers
             //TODO: Privilege check
 
             var role = await _roleRepository.GetByUserId(userId);
+            // move user to a proper chat
+            if (role.CompanyId != newCompanyId)
+            {
+                if (role.CompanyId != null)
+                {
+                    await _chatViewReportRepository.Delete(userId);
+                }
+                var companyChat = await _chatRepository.GetCompanyChat(newCompanyId);
+                await _chatViewReportRepository.Create(userId, companyChat.Id);
+
+                // move to a proper departament when changing companies
+                if (role.DepartmentId != null)
+                {
+                    await _chatViewReportRepository.Delete(userId);
+                }
+                var departamentChat = await _chatRepository.GetDepartamentChat(newCompanyId, newDepartamentId);
+                await _chatViewReportRepository.Create(userId, departamentChat.Id);
+            }
+            else if (role.DepartmentId != newDepartamentId)
+            {
+                if (role.DepartmentId != null)
+                {
+                    await _chatViewReportRepository.Delete(userId);
+                }
+                var departamentChat = await _chatRepository.GetDepartamentChat(newCompanyId, newDepartamentId);
+                await _chatViewReportRepository.Create(userId, departamentChat.Id);
+            }
+
             role.CompanyId = newCompanyId;
             role.DepartmentId = newDepartamentId;
             role.Type = (RoleType)newRoleTypeId;

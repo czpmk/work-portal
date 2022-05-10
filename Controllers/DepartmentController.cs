@@ -11,16 +11,16 @@ namespace WorkPortalAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class DepartamentController : ControllerBase
+    public class DepartmentController : ControllerBase
     {
         private readonly IRoleRepository _roleRepository;
         private readonly IChatRepository _chatRepository;
-        private readonly IDepartamentRepository _departamentRepository;
+        private readonly IDepartmentRepository _departamentRepository;
         private readonly ICompanyRepository _companyRepository;
         private readonly IAuthRepository _authRepository;
         private readonly IUserRepository _userRepository;
 
-        public DepartamentController(IUserRepository userRepository, IRoleRepository roleRepository, IChatRepository chatRepository, IAuthRepository authRepository, ICompanyRepository companyRepository, IDepartamentRepository departamentRepository)
+        public DepartmentController(IUserRepository userRepository, IRoleRepository roleRepository, IChatRepository chatRepository, IAuthRepository authRepository, ICompanyRepository companyRepository, IDepartmentRepository departamentRepository)
         {
             this._roleRepository = roleRepository;
             this._chatRepository = chatRepository;
@@ -47,7 +47,7 @@ namespace WorkPortalAPI.Controllers
         }
 
         [HttpPost("create")]
-        public async Task<IActionResult> Create(Departament departament, string token)
+        public async Task<IActionResult> Create(Department departament, string token)
         {
             if (!(await _authRepository.SessionValid(token)))
                 return WPResponse.AuthenticationInvalid();
@@ -71,7 +71,7 @@ namespace WorkPortalAPI.Controllers
             var chat = new Chat()
             {
                 CompanyId = newDepartament.CompanyId,
-                DepartamentId = newDepartament.Id
+                DepartmentId = newDepartament.Id
             };
             var newChat = await _chatRepository.Create(chat);
 
@@ -132,7 +132,7 @@ namespace WorkPortalAPI.Controllers
                 await _departamentRepository.RetractOwnership(oldHead);
             }
 
-            await _departamentRepository.GrantOwnership(newHead, RoleType.HEAD_OF_DEPARTAMENT, departament.Id);
+            await _departamentRepository.GrantOwnership(newHead, RoleType.HEAD_OF_DEPARTMENT, departament.Id);
             return WPResponse.Success();
         }
 

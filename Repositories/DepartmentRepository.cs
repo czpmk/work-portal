@@ -7,45 +7,45 @@ using System.Threading.Tasks;
 
 namespace WorkPortalAPI.Repositories
 {
-    public class DepartamentRepository : IDepartamentRepository
+    public class DepartmentRepository : IDepartmentRepository
     {
         private readonly WPContext _context;
-        public DepartamentRepository(WPContext context)
+        public DepartmentRepository(WPContext context)
         {
             this._context = context;
         }
-        public async Task<Departament> Create(Departament departament)
+        public async Task<Department> Create(Department departament)
         {
-            _context.Departaments.Add(departament);
+            _context.Departments.Add(departament);
             await _context.SaveChangesAsync();
             return departament;
         }
 
         public async Task Delete(int id)
         {
-            var departament = await _context.Departaments.FindAsync(id);
-            _context.Departaments.Remove(departament);
+            var departament = await _context.Departments.FindAsync(id);
+            _context.Departments.Remove(departament);
             await _context.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<Departament>> Get()
+        public async Task<IEnumerable<Department>> Get()
         {
-            return await _context.Departaments.ToListAsync();
+            return await _context.Departments.ToListAsync();
         }
 
-        public async Task<Departament> Get(int id)
+        public async Task<Department> Get(int id)
         {
-            return await _context.Departaments.FindAsync(id);
+            return await _context.Departments.FindAsync(id);
         }
 
         // TODO: remove ?
-        public async Task<IEnumerable<Departament>> GetByCompanyId(int companyId)
+        public async Task<IEnumerable<Department>> GetByCompanyId(int companyId)
         {
-            var gowno = from d in _context.Departaments where d.CompanyId == companyId select d;
+            var gowno = from d in _context.Departments where d.CompanyId == companyId select d;
             return await gowno.ToListAsync();
         }
 
-        public async Task Update(Departament departament)
+        public async Task Update(Department departament)
         {
             _context.Entry(departament).State = EntityState.Modified;
             await _context.SaveChangesAsync();
@@ -53,19 +53,19 @@ namespace WorkPortalAPI.Repositories
 
         public async Task<Boolean> Exists(int id)
         {
-            return await _context.Departaments.Where(d => d.Id == id).AnyAsync();
+            return await _context.Departments.Where(d => d.Id == id).AnyAsync();
         }
 
-        public async Task<Boolean> Exists(Departament departament)
+        public async Task<Boolean> Exists(Department departament)
         {
-            return await _context.Departaments.
+            return await _context.Departments.
                 Where(d => d.CompanyId == departament.CompanyId && d.Name == departament.Name).AnyAsync();
         }
 
-        public async Task<User> GetOwner(Departament departament)
+        public async Task<User> GetOwner(Department departament)
         {
-            var role = await _context.Roles.Where(r => r.Type == RoleType.HEAD_OF_DEPARTAMENT &&
-                                                   r.DepartamentId == departament.Id).FirstOrDefaultAsync();
+            var role = await _context.Roles.Where(r => r.Type == RoleType.HEAD_OF_DEPARTMENT &&
+                                                   r.DepartmentId == departament.Id).FirstOrDefaultAsync();
             if (role == null)
                 return null;
             else
@@ -89,8 +89,8 @@ namespace WorkPortalAPI.Repositories
             var role = await _context.Roles.Where(r => r.UserId == user.Id).FirstOrDefaultAsync();
             if (role != null)
             {
-                role.Type = RoleType.HEAD_OF_DEPARTAMENT;
-                role.DepartamentId = departamentId;
+                role.Type = RoleType.HEAD_OF_DEPARTMENT;
+                role.DepartmentId = departamentId;
                 _context.Entry(role).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
             }

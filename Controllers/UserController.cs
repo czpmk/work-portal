@@ -17,9 +17,9 @@ namespace WorkPortalAPI.Controllers
         private readonly IAuthRepository _authRepository;
         private readonly IRoleRepository _roleRepository;
         private readonly ICompanyRepository _companyRepository;
-        private readonly IDepartamentRepository _departamentRepository;
+        private readonly IDepartmentRepository _departamentRepository;
 
-        public UserController(IAuthRepository authRepository, IUserRepository userRepository, IRoleRepository roleRepository, ICompanyRepository companyRepository, IDepartamentRepository departamentRepository)
+        public UserController(IAuthRepository authRepository, IUserRepository userRepository, IRoleRepository roleRepository, ICompanyRepository companyRepository, IDepartmentRepository departamentRepository)
         {
             this._userRepository = userRepository;
             this._authRepository = authRepository;
@@ -107,7 +107,7 @@ namespace WorkPortalAPI.Controllers
 
             Role createdUserRole = new();
             createdUserRole.CompanyId = companyId;
-            createdUserRole.DepartamentId = departamentId;
+            createdUserRole.DepartmentId = departamentId;
             createdUserRole.UserId = createdUser.Id;
             createdUserRole.Type = (RoleType)roleTypeId;
 
@@ -240,7 +240,7 @@ namespace WorkPortalAPI.Controllers
 
             var role = await _roleRepository.GetByUserId(userId);
             role.CompanyId = newCompanyId;
-            role.DepartamentId = newDepartamentId;
+            role.DepartmentId = newDepartamentId;
             role.Type = (RoleType)newRoleTypeId;
 
             await _roleRepository.Update(role);

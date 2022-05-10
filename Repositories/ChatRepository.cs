@@ -44,13 +44,13 @@ namespace WorkPortalAPI.Repositories
                 chatList.Add(await GetPrivateChat(chat.FirstUserId.GetValueOrDefault(),
                     chat.SecondUserId.GetValueOrDefault()));
             }
-            else if (IsGroupChat(chat) && await GroupChatExists(chat.CompanyId.GetValueOrDefault(), chat.DepartamentId))
+            else if (IsGroupChat(chat) && await GroupChatExists(chat.CompanyId.GetValueOrDefault(), chat.DepartmentId))
             {
-                if (chat.DepartamentId == null)
+                if (chat.DepartmentId == null)
                     chatList.Add(await GetCompanyChat(chat.CompanyId.GetValueOrDefault()));
                 else
                     chatList.Add(await GetDepartamentChat(chat.CompanyId.GetValueOrDefault(),
-                    chat.DepartamentId.GetValueOrDefault()));
+                    chat.DepartmentId.GetValueOrDefault()));
             }
 
             return chatList.Any();
@@ -82,7 +82,7 @@ namespace WorkPortalAPI.Repositories
             return await _context.Chats.Where(c => c.FirstUserId == null &&
                                                 c.SecondUserId == null &&
                                                 c.CompanyId == companyId &&
-                                                c.DepartamentId == null
+                                                c.DepartmentId == null
                                                 ).FirstOrDefaultAsync();
         }
 
@@ -99,7 +99,7 @@ namespace WorkPortalAPI.Repositories
             return await _context.Chats.Where(c => c.FirstUserId == null &&
                                                 c.SecondUserId == null &&
                                                 c.CompanyId == companyId &&
-                                                c.DepartamentId == departamentId
+                                                c.DepartmentId == departamentId
                                                 ).FirstOrDefaultAsync();
         }
         public async Task<Message> GetLastMessage(int chatId)
@@ -185,7 +185,7 @@ namespace WorkPortalAPI.Repositories
 
         public Boolean IsPrivateChat(Chat chat)
         {
-            return chat.FirstUserId != null && chat.SecondUserId != null && chat.CompanyId == null && chat.DepartamentId == null;
+            return chat.FirstUserId != null && chat.SecondUserId != null && chat.CompanyId == null && chat.DepartmentId == null;
         }
         public async Task<Boolean> IsPrivateChat(int chatId)
         {
@@ -219,7 +219,7 @@ namespace WorkPortalAPI.Repositories
 
         public async Task<Boolean> GroupChatExists(int companyId, int? departamentId = null)
         {
-            return await _context.Chats.Where(c => (c.CompanyId == companyId) && (c.DepartamentId == departamentId)).AnyAsync();
+            return await _context.Chats.Where(c => (c.CompanyId == companyId) && (c.DepartmentId == departamentId)).AnyAsync();
         }
 
         public async Task<Dictionary<string, object>> GetChatDescriptionDictionary(int chatId)
@@ -229,48 +229,60 @@ namespace WorkPortalAPI.Repositories
 
             chatDescription.Add("users", null);
             chatDescription.Add("company", null);
-            chatDescription.Add("departament", null);
+            chatDescription.Add("department", null);
 
-            var usersRolesJoinedQuery = _context.Users.Join(
-                _context.Roles,
-                user => user.Id,
-                role => role.UserId,
-                (user, role) => new
+            var results =
+                from u in _context.Users
+                join r in _context.Roles on u.Id equals r.UserId
+                join c in _context.Companies on r.CompanyId equals c.Id
+                join d in _context.Departments on r.DepartmentId equals d.Id
+                select new
                 {
-                    Id = user.Id,
-                    FirstName = user.FirstName,
-                    Surname = user.Surname,
-                    Email = user.Email,
-                    CompanyId = role.CompanyId,
-                    DepartamentId = role.DepartamentId
-                }
-                );
+                    Id = u.Id,
+                    FirstName = u.FirstName,
+                    Surname = u.Surname,
+                    Email = u.Email,
+                    CompanyId = c.Id,
+                    CompanyName = c.Name,
+                    DepartmentId = d.Id,
+                    DepartmentName = d.Name
+                };
 
 
             if (await IsPrivateChat(chatId))
             {
-                chatDescription["users"] = await usersRolesJoinedQuery.Where(u => u.Id == chat.FirstUserId || u.Id == chat.SecondUserId)
-                    .ToDictionaryAsync(u => u.Id);
+                chatDescription["users"] = await results.Where(u => u.Id == chat.FirstUserId || u.Id == chat.SecondUserId)
+                    .ToListAsync();
             }
             else
             {
-                var company = await _context.Companies.FindAsync(chat.CompanyId);
-                chatDescription.Add("company", company.Name);
+                var company = await _context.Companies.Select(c => new
+                {
+                    Id = c.Id,
+                    Name = c.Name
+                }
+                ).Where(c => c.Id == chat.CompanyId).FirstOrDefaultAsync();
+                chatDescription["company"] = company;
 
                 // departament = null => get users for an entire Company
-                if (chat.DepartamentId == null)
+                if (chat.DepartmentId == null)
                 {
-                    chatDescription["users"] = await usersRolesJoinedQuery.Where(u => chat.CompanyId == u.CompanyId)
-                        .ToDictionaryAsync(u => u.Id);
+                    chatDescription["users"] = await results.Where(u => chat.CompanyId == u.CompanyId)
+                        .ToListAsync();
                 }
                 // departament != null => get users for the departament only
                 else
                 {
-                    var departament = await _context.Departaments.FindAsync(chat.DepartamentId);
-                    chatDescription.Add("departament", departament.Name);
+                    var department = await _context.Departments.Select(d => new
+                    {
+                        Id = d.Id,
+                        Name = d.Name
+                    }
+                    ).Where(d => d.Id == chat.DepartmentId).FirstOrDefaultAsync();
+                    chatDescription["department"] = department;
 
-                    chatDescription["users"] = await usersRolesJoinedQuery.Where(u => u.CompanyId == chat.CompanyId &&
-                                                                     u.DepartamentId == chat.DepartamentId).ToDictionaryAsync(u => u.Id);
+                    chatDescription["users"] = await results.Where(u => u.CompanyId == chat.CompanyId &&
+                                                                     u.DepartmentId == chat.DepartmentId).ToListAsync();
                 }
             }
             return chatDescription;

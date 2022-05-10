@@ -117,7 +117,7 @@ namespace WorkPortalAPI.Repositories
                 from u in _context.Users
                 join r in _context.Roles on u.Id equals r.UserId
                 join c in _context.Companies on r.CompanyId equals c.Id
-                join d in _context.Departaments on r.DepartamentId equals d.Id
+                join d in _context.Departments on r.DepartmentId equals d.Id
                 select new
                 {
                     Id = u.Id,
@@ -126,15 +126,15 @@ namespace WorkPortalAPI.Repositories
                     Email = u.Email,
                     CompanyId = c.Id,
                     CompanyName = c.Name,
-                    DepartamentId = d.Id,
-                    DepartamentName = d.Name
+                    DepartmentId = d.Id,
+                    DepartmentName = d.Name
                 };
 
             if (!skipFilterByCompany)
                 results = results.Where(u => u.CompanyId == companyIdNullable);
 
             if (!skipFilterByDepartament)
-                results = results.Where(u => u.DepartamentId == departamentIdNullable);
+                results = results.Where(u => u.DepartmentId == departamentIdNullable);
 
             if (skipFilterByUsername)
                 return await results.ToListAsync<dynamic>();

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace WorkPortalAPI.Models
 {
     [Table("departaments")]
-    public class Departament
+    public class Department
     {
         [Column("id")]
         [SwaggerSchema(ReadOnly = true)]

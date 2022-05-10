@@ -9,7 +9,7 @@ namespace WorkPortalAPI.Models
 {
     public enum RoleType {
         COMPANY_OWNER = 1,
-        HEAD_OF_DEPARTAMENT = 2,
+        HEAD_OF_DEPARTMENT = 2,
         USER = 3
     }
 
@@ -27,7 +27,7 @@ namespace WorkPortalAPI.Models
         public int CompanyId { get; set; }
 
         [Column("departament_id")]
-        public int DepartamentId { get; set; }
+        public int DepartmentId { get; set; }
 
         [Column("type")]
         public RoleType Type { get; set; }

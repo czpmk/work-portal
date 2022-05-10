@@ -19,7 +19,7 @@ namespace WorkPortalAPI.Models
         public int? CompanyId { get; set; }
 
         [Column("departament_id")]
-        public int? DepartamentId { get; set; }
+        public int? DepartmentId { get; set; }
 
         [Column("user_1_id")]
         public int? FirstUserId { get; set; }

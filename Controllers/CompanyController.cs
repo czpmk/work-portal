@@ -13,14 +13,14 @@ namespace WorkPortalAPI.Controllers
     public class CompanyController : ControllerBase
     {
         private readonly ICompanyRepository _companyRepository;
-        private readonly IDepartamentRepository _departamentRepository;
+        private readonly IDepartmentRepository _departamentRepository;
         private readonly IAuthRepository _authRepository;
         private readonly IChatRepository _chatRepository;
         private readonly IChatViewReportRepository _chatViewReportRepository;
         private readonly IUserRepository _userRepository;
 
 
-        public CompanyController(IUserRepository userRepository, ICompanyRepository companyRepository, IDepartamentRepository departamentRepository, IAuthRepository authRepository, IChatRepository chatRepository, IChatViewReportRepository chatViewReportRepository)
+        public CompanyController(IUserRepository userRepository, ICompanyRepository companyRepository, IDepartmentRepository departamentRepository, IAuthRepository authRepository, IChatRepository chatRepository, IChatViewReportRepository chatViewReportRepository)
         {
             this._companyRepository = companyRepository;
             this._departamentRepository = departamentRepository;

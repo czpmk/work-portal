@@ -15,7 +15,7 @@ namespace WorkPortalAPI.Models
             Database.EnsureCreated();
         }
         public DbSet<Company> Companies { get; set; }
-        public DbSet<Departament> Departaments { get; set; }
+        public DbSet<Department> Departments { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<Status> Statuses { get; set; }
         public DbSet<Session> Sessions { get; set; }

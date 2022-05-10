@@ -60,6 +60,11 @@ namespace WorkPortalAPI.Repositories
             return await _context.ChatViewReports.FindAsync(id);
         }
 
+        public async Task<ChatViewReport> Get(int userId, int chatId)
+        {
+            return await _context.ChatViewReports.Where(c => c.ChatId == chatId && c.UserId == userId).FirstOrDefaultAsync();
+        }
+
         public async Task<Message> GetLastSeenMessage(int chatId, int userId)
         {
             var report = await _context.ChatViewReports.Where(c => c.ChatId == chatId && c.UserId == userId).FirstOrDefaultAsync();

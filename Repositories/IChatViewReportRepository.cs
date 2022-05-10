@@ -10,6 +10,7 @@ namespace WorkPortalAPI.Repositories
     {
         Task<List<ChatViewReport>> Get();
         Task<ChatViewReport> Get(int id);
+        Task<ChatViewReport> Get(int userId, int chatId);
         Task<ChatViewReport> GetReportForUser(int chatId, int userId);
         Task<IEnumerable<ChatViewReport>> GetReportsForUser(int userId);
         Task<ChatViewReport> Create(ChatViewReport chatViewReport);

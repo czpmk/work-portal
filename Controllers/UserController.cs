@@ -21,7 +21,7 @@ namespace WorkPortalAPI.Controllers
         private readonly IChatViewReportRepository _chatViewReportRepository;
         private readonly IChatRepository _chatRepository;
 
-        public UserController(IAuthRepository authRepository, IUserRepository userRepository, IRoleRepository roleRepository, 
+        public UserController(IAuthRepository authRepository, IUserRepository userRepository, IRoleRepository roleRepository,
                                 ICompanyRepository companyRepository, IDepartmentRepository departamentRepository,
                                 IChatViewReportRepository chatViewReportRepository, IChatRepository chatRepository)
         {
@@ -250,7 +250,9 @@ namespace WorkPortalAPI.Controllers
             {
                 if (role.CompanyId != null)
                 {
-                    await _chatViewReportRepository.Delete(userId);
+                    var oldCompanyChat = await _chatRepository.GetCompanyChat(role.CompanyId);
+                    if (oldCompanyChat != null && await _chatViewReportRepository.Exists(userId, oldCompanyChat.Id))
+                        await _chatViewReportRepository.Delete(userId);
                 }
                 var companyChat = await _chatRepository.GetCompanyChat(newCompanyId);
                 await _chatViewReportRepository.Create(userId, companyChat.Id);
@@ -258,7 +260,9 @@ namespace WorkPortalAPI.Controllers
                 // move to a proper departament when changing companies
                 if (role.DepartmentId != null)
                 {
-                    await _chatViewReportRepository.Delete(userId);
+                    var oldDepartamentChat = await _chatRepository.GetDepartamentChat(role.CompanyId, role.DepartmentId);
+                    if (oldDepartamentChat != null && await _chatViewReportRepository.Exists(userId, oldDepartamentChat.Id))
+                        await _chatViewReportRepository.Delete(userId);
                 }
                 var departamentChat = await _chatRepository.GetDepartamentChat(newCompanyId, newDepartamentId);
                 await _chatViewReportRepository.Create(userId, departamentChat.Id);
@@ -267,7 +271,9 @@ namespace WorkPortalAPI.Controllers
             {
                 if (role.DepartmentId != null)
                 {
-                    await _chatViewReportRepository.Delete(userId);
+                    var oldDepartamentChat = await _chatRepository.GetDepartamentChat(role.CompanyId, role.DepartmentId);
+                    if (oldDepartamentChat != null && await _chatViewReportRepository.Exists(userId, oldDepartamentChat.Id))
+                        await _chatViewReportRepository.Delete(userId);
                 }
                 var departamentChat = await _chatRepository.GetDepartamentChat(newCompanyId, newDepartamentId);
                 await _chatViewReportRepository.Create(userId, departamentChat.Id);

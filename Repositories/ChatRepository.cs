@@ -112,15 +112,12 @@ namespace WorkPortalAPI.Repositories
         public async Task<List<Message>> GetMessages(int chatId, int n = -1)
         {
             var messages = await _context.Messages.Where(m => m.ChatId == chatId).ToListAsync();
+            messages.Sort((f, s) => s.Timestamp.CompareTo(f.Timestamp));
+            // return all if n not provided
             if (n == -1)
-            {
                 return messages;
-            }
             else
-            {
-                messages.Sort((f, s) => s.Timestamp.CompareTo(f.Timestamp));
                 return messages.Take(n).ToList();
-            }
         }
 
         public async Task<List<Message>> GetMessagesSince(int chatId, string UUID, int n = 50)

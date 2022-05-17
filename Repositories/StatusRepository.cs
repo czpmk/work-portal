@@ -51,6 +51,11 @@ namespace WorkPortalAPI.Repositories
             return await _context.Statuses.Where(s => s.UserId == userId).ToListAsync();
         }
 
+        public async Task<IEnumerable<Status>> Get(int userId, int month, int year)
+        {
+            return await _context.Statuses.Where(s => s.UserId == userId && s.Timestamp.Year == year && s.Timestamp.Month == month).ToListAsync();
+        }
+
         public async Task<Status> Last(int userId)
         {
             var status = await _context.Statuses.Where(s => s.UserId == userId).ToListAsync();

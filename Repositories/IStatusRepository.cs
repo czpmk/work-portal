@@ -10,6 +10,7 @@ namespace WorkPortalAPI.Repositories
     {
         Task<IEnumerable<Status>> Get();
         Task<IEnumerable<Status>> Get(int userId);
+        Task<IEnumerable<Status>> Get(int userId, int month, int year);
         Task<Status> Last(int userId);
         Task<Status> Create(Status status);
         Task Update(Status status);

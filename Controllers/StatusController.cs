@@ -6,6 +6,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using WorkPortalAPI.Repositories;
 using WorkPortalAPI.Models;
+using Spire.Xls;
+using System.IO;
 
 namespace WorkPortalAPI.Controllers
 {
@@ -99,6 +101,216 @@ namespace WorkPortalAPI.Controllers
             await _statusRepository.Create(newStatus);
 
             return WPResponse.Success();
+        }
+        
+        private static double calculateWorkTime(List<Status> statuses)
+        {
+            double workTime = .0d;
+            double breakTime = .0d;
+            bool workStarted = false;
+            DateTime workTimestamp = DateTime.MinValue;
+            bool breakStarted = false;
+            DateTime breakTimestamp = DateTime.MinValue;
+
+            if(statuses.Count == 1) //there must be a minimum of 2 statuses to be valid
+            {
+                return -1;
+            }
+
+            statuses.Sort((a, b) => a.Timestamp.CompareTo(b.Timestamp));
+
+            foreach (var status in statuses)
+            {
+
+                if (status.Type == StatusType.Work)
+                {
+                    if (!workStarted)
+                    {
+                        workStarted = true;
+                        workTimestamp = status.Timestamp;
+                    }
+                    else if(breakStarted)
+                    {
+                        breakStarted = false;
+                        breakTime += (double)(status.Timestamp.Ticks - breakTimestamp.Ticks) / TimeSpan.TicksPerHour;
+                    }
+                }
+                else if (status.Type == StatusType.Break)
+                {
+                    if (!workStarted) return -1; //invalid status
+                    if (!breakStarted)
+                    {
+                        breakStarted = true;
+                        breakTimestamp = status.Timestamp;
+                    }
+                }
+                else if (status.Type == StatusType.OutOfOffice)
+                {
+                    if (breakStarted)
+                    {
+                        breakStarted = false;
+                        breakTime += (double)(status.Timestamp.Ticks - breakTimestamp.Ticks) / TimeSpan.TicksPerHour;
+                    }
+                    if (workStarted)
+                    {
+                        workStarted = false;
+                        workTime += (double)(status.Timestamp.Ticks - workTimestamp.Ticks) / TimeSpan.TicksPerHour;
+                    }
+                }
+
+            }
+
+
+            return workTime - breakTime;
+        }
+
+        [HttpGet("export")]
+        public async Task<IActionResult> ExportStatusesSelf(string token, int month, int year)
+        {
+            if (!(await _authRepository.SessionValid(token)))
+                return WPResponse.AuthenticationInvalid();
+
+            var user = await _authRepository.GetUserByToken(token);
+
+            var statuses = await _statusRepository.Get(user.Id, month, year);
+
+            //create worksheet and workbook, setup template
+            Workbook workbook = new Workbook();
+            workbook.Worksheets[0].Name = "Raport obecności";
+            workbook.Worksheets[2].Remove();
+            workbook.Worksheets[1].Remove();
+            Worksheet sheet = workbook.Worksheets[0];
+            sheet.Range["A1"].Text = "Dzień miesiąca";
+            sheet.Range["B1"].Text = "Status obecności";
+            sheet.Range["C1"].Text = "Czas pracy [h]";
+            sheet.Range["E1"].Text = "Legenda:";
+            sheet.Range["E2"].Text = "O - Obecny";
+            sheet.Range["E3"].Text = "N - Nieobecny";
+            sheet.Range["E4"].Text = "U - Urlop";
+            sheet.Range["E5"].Text = "B - Błąd statusu";
+
+            //TODO: Add vacations
+
+            for (var day = 1; day <= DateTime.DaysInMonth(year, month); day++)
+            {
+                //select one day
+                var tmp = statuses.Where(s => s.Timestamp.Day == day
+                                            && s.Timestamp.Month == month 
+                                            && s.Timestamp.Year == year).ToList();
+
+                //calculate worktime
+                var workTime = calculateWorkTime(tmp);
+
+                //write to worksheet
+                sheet["A" + (day + 1).ToString()].Text = day.ToString();
+
+                if(workTime == -1) //status error
+                {
+                    sheet["B" + (day + 1).ToString()].Text = "B";
+                    sheet["C" + (day + 1).ToString()].Text = "0";
+                }
+                else if(workTime == 0) //absence from work
+                {
+                    sheet["B" + (day + 1).ToString()].Text = "N";
+                    sheet["C" + (day + 1).ToString()].Text = workTime.ToString();
+                }
+                else if (workTime > 0) //presence at work
+                {
+                    sheet["B" + (day + 1).ToString()].Text = "O";
+                    sheet["C" + (day + 1).ToString()].Text = workTime.ToString();
+                }
+            }
+
+            //convert workbook to byteArray
+            byte[] byteArray;
+            using (MemoryStream ms = new())
+            {
+                workbook.SaveToStream(ms);
+                byteArray = ms.ToArray();
+            }
+
+            //convert byteArray to base64String
+            var base64String = Convert.ToBase64String(byteArray, 0, byteArray.Length);
+
+            return WPResponse.Success(base64String);
+        }
+
+        [HttpGet("export/{userId}")]
+        public async Task<IActionResult> ExportStatuses(string token, int userId, int month, int year)
+        {
+            if (!(await _authRepository.SessionValid(token)))
+                return WPResponse.AuthenticationInvalid();
+
+            if (!(await _userRepository.Exists(userId)))
+                return WPResponse.ArgumentDoesNotExist("userId");
+
+            var invokingUser = await _authRepository.GetUserByToken(token);
+
+            //TODO: Add privilege check
+
+            var user = await _userRepository.Get(userId);
+
+            var statuses = await _statusRepository.Get(user.Id, month, year);
+
+            //create worksheet and workbook, setup template
+            Workbook workbook = new Workbook();
+            workbook.Worksheets[0].Name = "Raport obecności";
+            workbook.Worksheets[2].Remove();
+            workbook.Worksheets[1].Remove();
+            Worksheet sheet = workbook.Worksheets[0];
+            sheet.Range["A1"].Text = "Dzień miesiąca";
+            sheet.Range["B1"].Text = "Status obecności";
+            sheet.Range["C1"].Text = "Czas pracy [h]";
+            sheet.Range["E1"].Text = "Legenda:";
+            sheet.Range["E2"].Text = "O - Obecny";
+            sheet.Range["E3"].Text = "N - Nieobecny";
+            sheet.Range["E4"].Text = "U - Urlop";
+            sheet.Range["E5"].Text = "B - Błąd statusu";
+
+            //TODO: Add vacations
+
+            for (var day = 1; day <= DateTime.DaysInMonth(year, month); day++)
+            {
+                //select one day
+                var tmp = statuses.Where(s => s.Timestamp.Day == day
+                                            && s.Timestamp.Month == month
+                                            && s.Timestamp.Year == year).ToList();
+
+                //calculate worktime
+                var workTime = calculateWorkTime(tmp);
+
+                //write to worksheet
+                sheet["A" + (day + 1).ToString()].Text = day.ToString();
+
+                if (workTime == -1) //status error
+                {
+                    sheet["B" + (day + 1).ToString()].Text = "B";
+                    sheet["C" + (day + 1).ToString()].Text = "0";
+                }
+                else if (workTime == 0) //absence from work
+                {
+                    sheet["B" + (day + 1).ToString()].Text = "N";
+                    sheet["C" + (day + 1).ToString()].Text = workTime.ToString();
+                }
+                else if (workTime > 0) //presence at work
+                {
+                    sheet["B" + (day + 1).ToString()].Text = "O";
+                    sheet["C" + (day + 1).ToString()].Text = workTime.ToString();
+                }
+            }
+
+            //convert workbook to byteArray
+            byte[] byteArray;
+            using (MemoryStream ms = new())
+            {
+                workbook.SaveToStream(ms);
+                byteArray = ms.ToArray();
+            }
+
+            //convert byteArray to base64String
+            var base64String = Convert.ToBase64String(byteArray, 0, byteArray.Length);
+
+            return WPResponse.Success(base64String);
         }
 
         [HttpDelete("DEBUG/resetStatuses")]

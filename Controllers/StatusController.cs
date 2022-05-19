@@ -192,16 +192,32 @@ namespace WorkPortalAPI.Controllers
             sheet.Range["E5"].Text = "B - Błąd statusu";
 
             //TODO: Add vacations
+            var vacations = await _vacationRepository.GetByUserId(user.Id);
 
             for (var day = 1; day <= DateTime.DaysInMonth(year, month); day++)
             {
+                //select one day of vacations
+                DateTime tmpDate = new DateTime(year, month, day);
+                var tmpVacations = vacations.Where(v => tmpDate >= v.StartDate
+                                                    && tmpDate <= (new DateTime(v.EndDate.Ticks)).AddTicks(TimeSpan.TicksPerDay - 1)
+                                                    && v.State == VacationRequestState.ACCEPTED).ToList();
+
+                //if there is at least one vacation request - write to worksheet and continue
+                if (tmpVacations.Count > 0)
+                {
+                    sheet["A" + (day + 1).ToString()].Text = day.ToString();
+                    sheet["B" + (day + 1).ToString()].Text = "U";
+                    sheet["C" + (day + 1).ToString()].Text = "0";
+                    continue;
+                }
+
                 //select one day
-                var tmp = statuses.Where(s => s.Timestamp.Day == day
+                var tmpWork = statuses.Where(s => s.Timestamp.Day == day
                                             && s.Timestamp.Month == month 
                                             && s.Timestamp.Year == year).ToList();
 
                 //calculate worktime
-                var workTime = calculateWorkTime(tmp);
+                var workTime = calculateWorkTime(tmpWork);
 
                 //write to worksheet
                 sheet["A" + (day + 1).ToString()].Text = day.ToString();
@@ -275,11 +291,14 @@ namespace WorkPortalAPI.Controllers
             {
                 //select one day of vacations
                 DateTime tmpDate = new DateTime(year, month, day);
-                var tmpVacations = vacations.Where(v => tmpDate >= v.StartDate && tmpDate < v.EndDate).ToList();
+                var tmpVacations = vacations.Where(v => tmpDate >= v.StartDate
+                                                    && tmpDate <= (new DateTime(v.EndDate.Ticks)).AddTicks(TimeSpan.TicksPerDay - 1)
+                                                    && v.State == VacationRequestState.ACCEPTED).ToList();
 
                 //if there is at least one vacation request - write to worksheet and continue
                 if (tmpVacations.Count > 0)
                 {
+                    sheet["A" + (day + 1).ToString()].Text = day.ToString();
                     sheet["B" + (day + 1).ToString()].Text = "U";
                     sheet["C" + (day + 1).ToString()].Text = "0";
                     continue;

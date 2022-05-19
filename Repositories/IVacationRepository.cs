@@ -8,8 +8,11 @@ namespace WorkPortalAPI.Repositories
 {
     public interface IVacationRepository
     {
-        Task<IEnumerable<Vacation>> Get();
+        Task<List<Vacation>> Get();
         Task<Vacation> Get(int id);
+        Task<List<Vacation>> GetByUserId(int userId);
+        Task<List<Vacation>> GetByCompanyId(int companyId);
+        Task<List<Vacation>> GetByDepartmentId(int departmentId);
         Task<Vacation> Create(Vacation vacation);
         Task Update(Vacation vacation);
         Task Delete(int id);

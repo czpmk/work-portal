@@ -19,13 +19,16 @@ namespace WorkPortalAPI.Controllers
         private readonly IUserRepository _userRepository;
         private readonly IAuthRepository _authRepository;
         private readonly IRoleRepository _roleRepository;
+        private readonly IVacationRepository _vacationRepository;
 
-        public StatusController(IStatusRepository statusRepository, IAuthRepository authRepository, IRoleRepository roleRepository, IUserRepository userRepository)
+        public StatusController(IStatusRepository statusRepository, IAuthRepository authRepository, IRoleRepository roleRepository, IUserRepository userRepository, IVacationRepository vacationRepository)
         {
             this._authRepository = authRepository;
             this._statusRepository = statusRepository;
             this._roleRepository = roleRepository;
             this._userRepository = userRepository;
+            this._vacationRepository = vacationRepository;
+
         }
 
         [HttpGet("")]
@@ -34,9 +37,8 @@ namespace WorkPortalAPI.Controllers
             if (!(await _authRepository.SessionValid(token)))
                 return WPResponse.AuthenticationInvalid();
 
-                var user = await _authRepository.GetUserByToken(token);
-
-                var status = await _statusRepository.Get(user.Id);
+            var user = await _authRepository.GetUserByToken(token);
+            var status = await _statusRepository.Get(user.Id);
 
             return WPResponse.Success(status);
         }
@@ -267,17 +269,29 @@ namespace WorkPortalAPI.Controllers
             sheet.Range["E4"].Text = "U - Urlop";
             sheet.Range["E5"].Text = "B - Błąd statusu";
 
-            //TODO: Add vacations
+            var vacations = await _vacationRepository.GetByUserId(user.Id);
 
             for (var day = 1; day <= DateTime.DaysInMonth(year, month); day++)
             {
-                //select one day
-                var tmp = statuses.Where(s => s.Timestamp.Day == day
-                                            && s.Timestamp.Month == month
-                                            && s.Timestamp.Year == year).ToList();
+                //select one day of vacations
+                DateTime tmpDate = new DateTime(year, month, day);
+                var tmpVacations = vacations.Where(v => tmpDate >= v.StartDate && tmpDate < v.EndDate).ToList();
+
+                //if there is at least one vacation request - write to worksheet and continue
+                if (tmpVacations.Count > 0)
+                {
+                    sheet["B" + (day + 1).ToString()].Text = "U";
+                    sheet["C" + (day + 1).ToString()].Text = "0";
+                    continue;
+                }
+
+                //select one day of work
+                var tmpWork = statuses.Where(s => s.Timestamp.Day == day
+                                         && s.Timestamp.Month == month
+                                         && s.Timestamp.Year == year).ToList();
 
                 //calculate worktime
-                var workTime = calculateWorkTime(tmp);
+                var workTime = calculateWorkTime(tmpWork);
 
                 //write to worksheet
                 sheet["A" + (day + 1).ToString()].Text = day.ToString();

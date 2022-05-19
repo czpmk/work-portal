@@ -15,10 +15,14 @@ namespace WorkPortalAPI.Controllers
     public class VacationController : ControllerBase
     {
         private readonly IVacationRepository _vacationRepository;
+        private readonly IAuthRepository _authRepository;
+        private readonly IRoleRepository _roleRepository;
 
-        public VacationController(IVacationRepository vacationRepository)
+        public VacationController(IVacationRepository vacationRepository, IAuthRepository authRepository, IRoleRepository roleRepository)
         {
             this._vacationRepository = vacationRepository;
+            this._authRepository = authRepository;
+            this._roleRepository = roleRepository;
         }
 
         [HttpGet("DEBUG")]
@@ -43,6 +47,112 @@ namespace WorkPortalAPI.Controllers
 
             await _vacationRepository.DeleteAll();
             return WPResponse.Success();
+        }
+
+        [HttpPut("createRequest")]
+        public async Task<IActionResult> CreateVacationRequest(string token, Vacation vacation)
+        {
+            if (!(await _authRepository.SessionValid(token)))
+                return WPResponse.AuthenticationInvalid();
+
+            var user = await _authRepository.GetUserByToken(token);
+
+            if (!Enum.IsDefined(typeof(VacationType), vacation.Type))
+                return WPResponse.ArgumentDoesNotExist("type");
+
+            if (vacation.StartDate.CompareTo(vacation.EndDate) > 0)
+                return WPResponse.ArgumentInvalid("Start date can't be later than end date");
+
+            vacation.ModificationTime = DateTime.Now;
+            vacation.UserId = user.Id;
+            vacation.State = VacationRequestState.PENDING;
+
+            await _vacationRepository.Create(vacation);
+
+            return WPResponse.Success();
+        }
+
+        [HttpPost("acceptRequest")]
+        public async Task<IActionResult> AcceptVacationRequest(string token, int requestId)
+        {
+            if (!(await _authRepository.SessionValid(token)))
+                return WPResponse.AuthenticationInvalid();
+
+            var user = await _authRepository.GetUserByToken(token);
+
+            //TODO: Privilege check
+            
+            var request = await _vacationRepository.Get(requestId);
+
+            if (request == null)
+                return WPResponse.ArgumentDoesNotExist("requestId");
+
+            request.State = VacationRequestState.ACCEPTED;
+
+            await _vacationRepository.Update(request);
+
+            return WPResponse.Success();
+        }
+
+        [HttpPost("rejectRequest")]
+        public async Task<IActionResult> RejectVacationRequest(string token, int requestId)
+        {
+            if (!(await _authRepository.SessionValid(token)))
+                return WPResponse.AuthenticationInvalid();
+
+            var user = await _authRepository.GetUserByToken(token);
+
+            //TODO: Privilege check
+
+            var request = await _vacationRepository.Get(requestId);
+
+            if (request == null)
+                return WPResponse.ArgumentDoesNotExist("requestId");
+
+            request.State = VacationRequestState.REJECTED;
+
+            await _vacationRepository.Update(request);
+
+            return WPResponse.Success();
+        }
+
+        [HttpGet("")]
+        public async Task<IActionResult> getVacationRequestSelf(string token)
+        {
+            if (!(await _authRepository.SessionValid(token)))
+                return WPResponse.AuthenticationInvalid();
+
+            var user = await _authRepository.GetUserByToken(token);
+            var requests = await _vacationRepository.GetByUserId(user.Id);
+
+            return WPResponse.Success(requests);
+        }
+
+        [HttpGet("privilegeBased")]
+        public async Task<IActionResult> getVacationRequests(string token)
+        {
+            if (!(await _authRepository.SessionValid(token)))
+                return WPResponse.AuthenticationInvalid();
+
+            var user = await _authRepository.GetUserByToken(token);
+            var role = await _roleRepository.GetByUserId(user.Id);
+
+            IEnumerable<Vacation> requests;
+
+            if(role.Type == RoleType.COMPANY_OWNER)
+            {
+                requests = await _vacationRepository.GetByCompanyId(role.CompanyId);
+            }
+            else if (role.Type == RoleType.HEAD_OF_DEPARTMENT)
+            {
+                requests = await _vacationRepository.GetByDepartmentId(role.DepartmentId);
+            }
+            else
+            {
+                return WPResponse.AccessDenied("Must be a company owner or head of department.");
+            }
+
+            return WPResponse.Success(requests);
         }
     }
 }

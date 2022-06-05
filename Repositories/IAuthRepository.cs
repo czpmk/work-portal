@@ -17,5 +17,7 @@ namespace WorkPortalAPI.Repositories
         Task<Session> TerminateSession(Session session);
         Task<string> TerminateSession(string token);
         Task<Boolean> SessionValid(string token);
+        Task<Boolean> CheckAccess(int requestingUserId, int targetUserId, List<RoleType> eligibleRoles);
+
     }
 }

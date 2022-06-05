@@ -95,5 +95,34 @@ namespace WorkPortalAPI.Repositories
             var user = await GetUserByToken(token);
             return await _context.Roles.Where(r => r.UserId == user.Id).FirstOrDefaultAsync();
         }
+
+        public async Task<Boolean> CheckAccess(int requestingUserId, int targetUserId,
+            List<RoleType> eligibleRoles)
+        {
+            var requestingUser = await _context.Users.FindAsync(requestingUserId);
+            var requestingUsersRole = await _context.Roles.Where(r => r.UserId == requestingUser.Id).FirstOrDefaultAsync();
+
+            var targetUser = await _context.Users.FindAsync(targetUserId);
+            var targetUsersRole = await _context.Roles.Where(r => r.UserId == targetUser.Id).FirstOrDefaultAsync();
+
+            if (requestingUserId == targetUserId)
+                return true;
+
+            else if (eligibleRoles.Contains(RoleType.HEAD_OF_DEPARTMENT) &&
+                requestingUsersRole.Type == RoleType.HEAD_OF_DEPARTMENT &&
+                requestingUsersRole.DepartmentId == targetUsersRole.DepartmentId)
+                return true;
+
+            else if (eligibleRoles.Contains(RoleType.COMPANY_OWNER) &&
+                requestingUsersRole.Type == RoleType.COMPANY_OWNER &&
+                requestingUsersRole.CompanyId == targetUsersRole.CompanyId)
+                return true;
+
+            else if (requestingUser.IsAdmin)
+                return true;
+
+            else
+                return false;
+        }
     }
 }

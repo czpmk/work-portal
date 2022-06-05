@@ -48,11 +48,18 @@ namespace WorkPortalAPI.Controllers
         {
             if (!(await _authRepository.SessionValid(token)))
                 return WPResponse.AuthenticationInvalid();
-            
-            var user = await _authRepository.GetUserByToken(token);
-            var role = await _roleRepository.Get(user.Id);
 
-            //TODO: Privilege check
+            var requestingUser = await _authRepository.GetUserByToken(token);
+            var requestingUsersRole = await _roleRepository.GetByUserId(requestingUser.Id);
+
+            var targetUser = await _userRepository.Get(userId);
+            var targetUsersRole = await _roleRepository.GetByUserId(targetUser.Id);
+
+            //Privilege check
+            if (!(await _authRepository.CheckAccess(requestingUser.Id, userId, new List<RoleType> { RoleType.COMPANY_OWNER, RoleType.HEAD_OF_DEPARTMENT })))
+            {
+                return WPResponse.AccessDenied("status");
+            }
 
             if (!(await _userRepository.Exists(userId)))
                 return WPResponse.ArgumentDoesNotExist("userId");
@@ -89,12 +96,13 @@ namespace WorkPortalAPI.Controllers
             newStatus.Type = (StatusType)statusTypeId;
             newStatus.UserId = user.Id;
 
-            if (lastStatus != null) {
-                if(lastStatus.Type == newStatus.Type)
+            if (lastStatus != null)
+            {
+                if (lastStatus.Type == newStatus.Type)
                 {
                     return WPResponse.OperationNotAllowed("This status is already set! New status can't be same as last status of user.");
                 }
-                else if(lastStatus.Type == StatusType.OutOfOffice && newStatus.Type == StatusType.Break)
+                else if (lastStatus.Type == StatusType.OutOfOffice && newStatus.Type == StatusType.Break)
                 {
                     return WPResponse.OperationNotAllowed("Can't set status from 'OutOfOffice' to 'Break'.");
                 }
@@ -104,7 +112,7 @@ namespace WorkPortalAPI.Controllers
 
             return WPResponse.Success();
         }
-        
+
         private static double calculateWorkTime(List<Status> statuses)
         {
             double workTime = .0d;
@@ -114,7 +122,7 @@ namespace WorkPortalAPI.Controllers
             bool breakStarted = false;
             DateTime breakTimestamp = DateTime.MinValue;
 
-            if(statuses.Count == 1) //there must be a minimum of 2 statuses to be valid
+            if (statuses.Count == 1) //there must be a minimum of 2 statuses to be valid
             {
                 return -1;
             }
@@ -131,7 +139,7 @@ namespace WorkPortalAPI.Controllers
                         workStarted = true;
                         workTimestamp = status.Timestamp;
                     }
-                    else if(breakStarted)
+                    else if (breakStarted)
                     {
                         breakStarted = false;
                         breakTime += (double)(status.Timestamp.Ticks - breakTimestamp.Ticks) / TimeSpan.TicksPerHour;
@@ -213,7 +221,7 @@ namespace WorkPortalAPI.Controllers
 
                 //select one day
                 var tmpWork = statuses.Where(s => s.Timestamp.Day == day
-                                            && s.Timestamp.Month == month 
+                                            && s.Timestamp.Month == month
                                             && s.Timestamp.Year == year).ToList();
 
                 //calculate worktime
@@ -222,12 +230,12 @@ namespace WorkPortalAPI.Controllers
                 //write to worksheet
                 sheet["A" + (day + 1).ToString()].Text = day.ToString();
 
-                if(workTime == -1) //status error
+                if (workTime == -1) //status error
                 {
                     sheet["B" + (day + 1).ToString()].Text = "B";
                     sheet["C" + (day + 1).ToString()].Text = "0";
                 }
-                else if(workTime == 0) //absence from work
+                else if (workTime == 0) //absence from work
                 {
                     sheet["B" + (day + 1).ToString()].Text = "N";
                     sheet["C" + (day + 1).ToString()].Text = workTime.ToString();
@@ -262,9 +270,13 @@ namespace WorkPortalAPI.Controllers
             if (!(await _userRepository.Exists(userId)))
                 return WPResponse.ArgumentDoesNotExist("userId");
 
-            var invokingUser = await _authRepository.GetUserByToken(token);
+            var requestingUser = await _authRepository.GetUserByToken(token);
 
-            //TODO: Add privilege check
+            //Privilege check
+            if (!(await _authRepository.CheckAccess(requestingUser.Id, userId, new List<RoleType> { RoleType.COMPANY_OWNER, RoleType.HEAD_OF_DEPARTMENT })))
+            {
+                return WPResponse.AccessDenied("status");
+            }
 
             var user = await _userRepository.Get(userId);
 

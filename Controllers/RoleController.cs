@@ -14,16 +14,28 @@ namespace WorkPortalAPI.Controllers
     public class RoleController
     {
         private readonly IRoleRepository _roleRepository;
+        private readonly IAuthRepository _authRepository;
 
-        public RoleController(IRoleRepository roleRepository)
+        public RoleController(IRoleRepository roleRepository, IAuthRepository authRepository)
         {
             this._roleRepository = roleRepository;
+            this._authRepository = authRepository;
         }
 
-        [HttpGet("DEBUG")]
-        public async Task<IActionResult> Get()
+        [HttpGet()]
+        public async Task<IActionResult> Get(string token)
         {
-            return WPResponse.Success(await _roleRepository.Get());
+            if (!(await _authRepository.SessionValid(token)))
+                return WPResponse.AuthenticationInvalid();
+
+            var requestingUser = await _authRepository.GetUserByToken(token);
+            var requestingUsersRole = await _roleRepository.GetByUserId(requestingUser.Id);
+
+            return WPResponse.Success(
+                new Dictionary<string, object> {
+                    { "role", requestingUsersRole.Type },
+                    { "isAdmin", requestingUser.IsAdmin} }
+                );
         }
 
         [HttpGet("DEBUG/{id}")]

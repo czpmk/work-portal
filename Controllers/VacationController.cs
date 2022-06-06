@@ -150,19 +150,6 @@ namespace WorkPortalAPI.Controllers
             else if (role.Type == RoleType.HEAD_OF_DEPARTMENT)
                 return WPResponse.Success(await _vacationRepository.GetByDepartmentId(role.CompanyId, role.DepartmentId));
 
-            //if(role.Type == RoleType.COMPANY_OWNER)
-            //{
-            //    requests = await _vacationRepository.GetByCompanyId(role.CompanyId);
-            //}
-            //else if (role.Type == RoleType.HEAD_OF_DEPARTMENT)
-            //{
-            //    requests = await _vacationRepository.GetByDepartmentId(role.DepartmentId);
-            //}
-            //else
-            //{
-            //    return WPResponse.AccessDenied("Must be a company owner or head of department.");
-            //}
-
             return WPResponse.InternalError();
         }
     }

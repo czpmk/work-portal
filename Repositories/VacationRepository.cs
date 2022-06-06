@@ -45,20 +45,17 @@ namespace WorkPortalAPI.Repositories
 
         public async Task<List<Vacation>> GetByCompanyId(int companyId)
         {
-            var validRoles = _context.Roles.Where(r => r.CompanyId == companyId).ToList();
-            var validUsers = _context.Vacations.Where(u => validRoles.Any(x => x.Id == u.Id));
-            return await _context.Vacations.Where(v => validUsers.Any(x => x.Id == v.UserId)).ToListAsync();
-            //var vacationIds = await _context.Vacations.Join(_context.Roles, v => v.UserId, r => r.UserId,
-            //                                                                (v, r) => new
-            //                                                                {
-            //                                                                    Id = v.Id,
-            //                                                                    CompanyId = r.CompanyId,
-            //                                                                }
-            //                                                            ).Where(vr => vr.CompanyId == companyId)
-            //                                                            .Select(vr => vr.Id)
-            //                                                            .ToListAsync();
+            var vacationIds = await _context.Vacations.Join(_context.Roles, v => v.UserId, r => r.UserId,
+                                                                            (v, r) => new
+                                                                            {
+                                                                                Id = v.Id,
+                                                                                CompanyId = r.CompanyId,
+                                                                            }
+                                                                        ).Where(vr => vr.CompanyId == companyId)
+                                                                        .Select(vr => vr.Id)
+                                                                        .ToListAsync();
 
-            //return await _context.Vacations.Where(v => vacationIds.Contains(v.Id)).ToListAsync();
+            return await _context.Vacations.Where(v => vacationIds.Contains(v.Id)).ToListAsync();
         }
 
         public async Task<List<Vacation>> GetByDepartmentId(int companyId, int departmentId)
@@ -70,7 +67,8 @@ namespace WorkPortalAPI.Repositories
                                                                                 CompanyId = r.CompanyId,
                                                                                 DepartmentId = r.DepartmentId,
                                                                             }
-                                                                        ).Where(vr => vr.DepartmentId == departmentId)
+                                                                        ).Where(vr => vr.DepartmentId == departmentId &&
+                                                                                      vr.CompanyId == companyId)
                                                                         .Select(vr => vr.Id)
                                                                         .ToListAsync();
 

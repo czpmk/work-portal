@@ -34,8 +34,10 @@ namespace WorkPortalAPI.Controllers
             return WPResponse.Success(
                 new Dictionary<string, object> {
                     { "role", requestingUsersRole.Type },
-                    { "isAdmin", requestingUser.IsAdmin} }
-                );
+                    { "isAdmin", requestingUser.IsAdmin},
+                    { "companyId", requestingUsersRole.CompanyId },
+                    { "departamentId", requestingUsersRole.DepartmentId },
+                });
         }
 
         [HttpGet("DEBUG/{id}")]

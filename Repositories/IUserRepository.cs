@@ -17,5 +17,6 @@ namespace WorkPortalAPI.Repositories
         Task<Boolean> Exists(string email);
         Task DeleteAll();
         Task<IEnumerable<dynamic>> FindUsers(string? userNameNullable, int? companyIdNullable, int? departamentIdNullable);
+        Task<IEnumerable<dynamic>> GetInfoForUsers(int? userId, int? companyId, int? departamentId);
     }
 }

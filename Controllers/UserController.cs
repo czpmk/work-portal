@@ -35,13 +35,13 @@ namespace WorkPortalAPI.Controllers
         }
 
         [HttpGet("DEBUG")]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> GetDebug()
         {
             return WPResponse.Success(await _userRepository.Get());
         }
 
         [HttpGet("DEBUG/{id}")]
-        public async Task<IActionResult> Get(int id)
+        public async Task<IActionResult> GetDebug(int id)
         {
             var user = await _userRepository.Get(id);
             if (user == null)
@@ -62,6 +62,43 @@ namespace WorkPortalAPI.Controllers
         {
             var role = await _authRepository.GetUserRoleByToken(token);
             return WPResponse.Success(role);
+        }
+
+        [HttpGet("info")]
+        public async Task<IActionResult> Get(string token)
+        {
+            if (!(await _authRepository.SessionValid(token)))
+                return WPResponse.AuthenticationInvalid();
+
+            var requestingUser = await _authRepository.GetUserByToken(token);
+            var requestingUsersRole = await _roleRepository.GetByUserId(requestingUser.Id);
+
+            if (requestingUser.IsAdmin)
+            {
+                return WPResponse.Success(await _userRepository.GetInfoForUsers(null, null, null));
+            }
+            else
+            {
+                switch (requestingUsersRole.Type)
+                {
+                    case RoleType.COMPANY_OWNER:
+                        return WPResponse.Success(await _userRepository.GetInfoForUsers(null, requestingUsersRole.CompanyId, null));
+                    case RoleType.HEAD_OF_DEPARTMENT:
+                        return WPResponse.Success(await _userRepository.GetInfoForUsers(null, requestingUsersRole.CompanyId, requestingUsersRole.DepartmentId));
+                    case RoleType.USER:
+                    default:
+                        return WPResponse.Success(await _userRepository.GetInfoForUsers(requestingUser.Id, null, null));
+                }
+            }
+        }
+
+        [HttpGet("info/{userId}")]
+        public async Task<IActionResult> GetForUser(string token, int userId)
+        {
+            if (!(await _authRepository.SessionValid(token)))
+                return WPResponse.AuthenticationInvalid();
+
+            return WPResponse.Success((await _userRepository.GetInfoForUsers(userId, null, null)).FirstOrDefault());
         }
 
         [HttpPut("create")]

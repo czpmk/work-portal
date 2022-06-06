@@ -144,5 +144,40 @@ namespace WorkPortalAPI.Repositories
                                         userNameList.All(x => r.FirstName.ToString().ToLower().Contains(x) ||
                                                               r.Surname.ToString().ToLower().Contains(x)));
         }
+
+        public async Task<IEnumerable<dynamic>> GetInfoForUsers(int? userId, int? companyId, int? departamentId)
+        {
+            var skipFilterByUserId = userId == null;
+            var skipFilterByCompanyId = companyId == null;
+            var skipFilterByDepartamentId = departamentId == null;
+
+            var results =
+                from u in _context.Users
+                join r in _context.Roles on u.Id equals r.UserId
+                join c in _context.Companies on r.CompanyId equals c.Id
+                join d in _context.Departments on r.DepartmentId equals d.Id
+                select new
+                {
+                    Id = u.Id,
+                    FirstName = u.FirstName,
+                    Surname = u.Surname,
+                    Email = u.Email,
+                    CompanyId = c.Id,
+                    CompanyName = c.Name,
+                    DepartmentId = d.Id,
+                    DepartmentName = d.Name
+                };
+
+            if (!skipFilterByUserId)
+                results = results.Where(u => u.Id == userId);
+
+            if (!skipFilterByCompanyId)
+                results = results.Where(u => u.CompanyId == companyId);
+
+            if (!skipFilterByDepartamentId)
+                results = results.Where(u => u.DepartmentId == departamentId);
+
+            return await results.ToListAsync<dynamic>();
+        }
     }
 }

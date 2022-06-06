@@ -56,10 +56,23 @@ namespace WorkPortalAPI.Controllers
             var targetUsersRole = await _roleRepository.GetByUserId(targetUser.Id);
 
             //Privilege check
-            if (!(await _authRepository.CheckAccess(requestingUser.Id, userId, new List<RoleType> { RoleType.COMPANY_OWNER, RoleType.HEAD_OF_DEPARTMENT })))
-            {
-                return WPResponse.AccessDenied("status");
-            }
+            var validChecks = 0;
+
+            if (requestingUsersRole.Type == RoleType.HEAD_OF_DEPARTMENT &&
+                requestingUsersRole.CompanyId == targetUsersRole.CompanyId &&
+                requestingUsersRole.DepartmentId == targetUsersRole.DepartmentId)
+                validChecks++;
+
+            else if (requestingUsersRole.Type == RoleType.COMPANY_OWNER &&
+                requestingUsersRole.CompanyId == targetUsersRole.CompanyId)
+                validChecks++;
+
+            else if (requestingUser.IsAdmin)
+                validChecks++;
+
+            if (validChecks == 0)
+                return WPResponse.AccessDenied("access level");
+            // ***
 
             if (!(await _userRepository.Exists(userId)))
                 return WPResponse.ArgumentDoesNotExist("userId");
@@ -271,12 +284,29 @@ namespace WorkPortalAPI.Controllers
                 return WPResponse.ArgumentDoesNotExist("userId");
 
             var requestingUser = await _authRepository.GetUserByToken(token);
+            var requestingUsersRole = await _roleRepository.GetByUserId(requestingUser.Id);
+
+            var targetUser = await _userRepository.Get(userId);
+            var targetUsersRole = await _roleRepository.GetByUserId(targetUser.Id);
 
             //Privilege check
-            if (!(await _authRepository.CheckAccess(requestingUser.Id, userId, new List<RoleType> { RoleType.COMPANY_OWNER, RoleType.HEAD_OF_DEPARTMENT })))
-            {
-                return WPResponse.AccessDenied("status");
-            }
+            var validChecks = 0;
+
+            if (requestingUsersRole.Type == RoleType.HEAD_OF_DEPARTMENT &&
+                requestingUsersRole.CompanyId == targetUsersRole.CompanyId &&
+                requestingUsersRole.DepartmentId == targetUsersRole.DepartmentId)
+                validChecks++;
+
+            else if (requestingUsersRole.Type == RoleType.COMPANY_OWNER &&
+                requestingUsersRole.CompanyId == targetUsersRole.CompanyId)
+                validChecks++;
+
+            else if (requestingUser.IsAdmin)
+                validChecks++;
+
+            if (validChecks == 0)
+                return WPResponse.AccessDenied("access level");
+            // ***
 
             var user = await _userRepository.Get(userId);
 

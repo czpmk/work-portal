@@ -128,7 +128,7 @@ namespace WorkPortalAPI.Controllers
             return WPResponse.Success(requests);
         }
 
-        [HttpGet("privilegeBased")]
+        [HttpGet("getRequestsForApprover")]
         public async Task<IActionResult> getVacationRequests(string token)
         {
             if (!(await _authRepository.SessionValid(token)))
@@ -137,22 +137,33 @@ namespace WorkPortalAPI.Controllers
             var user = await _authRepository.GetUserByToken(token);
             var role = await _roleRepository.GetByUserId(user.Id);
 
-            IEnumerable<Vacation> requests;
+            if (role.Type == RoleType.USER && !user.IsAdmin)
+                return WPResponse.AccessDenied("Must be a company owner, head of department or admin.");
 
-            if(role.Type == RoleType.COMPANY_OWNER)
-            {
-                requests = await _vacationRepository.GetByCompanyId(role.CompanyId);
-            }
+            //IEnumerable<Vacation> requests;
+            if (user.IsAdmin == true)
+                return WPResponse.Success(await _vacationRepository.Get());
+
+            else if (role.Type == RoleType.COMPANY_OWNER)
+                return WPResponse.Success(await _vacationRepository.GetByCompanyId(role.CompanyId));
+
             else if (role.Type == RoleType.HEAD_OF_DEPARTMENT)
-            {
-                requests = await _vacationRepository.GetByDepartmentId(role.DepartmentId);
-            }
-            else
-            {
-                return WPResponse.AccessDenied("Must be a company owner or head of department.");
-            }
+                return WPResponse.Success(await _vacationRepository.GetByDepartmentId(role.CompanyId, role.DepartmentId));
 
-            return WPResponse.Success(requests);
+            //if(role.Type == RoleType.COMPANY_OWNER)
+            //{
+            //    requests = await _vacationRepository.GetByCompanyId(role.CompanyId);
+            //}
+            //else if (role.Type == RoleType.HEAD_OF_DEPARTMENT)
+            //{
+            //    requests = await _vacationRepository.GetByDepartmentId(role.DepartmentId);
+            //}
+            //else
+            //{
+            //    return WPResponse.AccessDenied("Must be a company owner or head of department.");
+            //}
+
+            return WPResponse.InternalError();
         }
     }
 }

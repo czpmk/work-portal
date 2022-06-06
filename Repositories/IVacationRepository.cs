@@ -12,7 +12,7 @@ namespace WorkPortalAPI.Repositories
         Task<Vacation> Get(int id);
         Task<List<Vacation>> GetByUserId(int userId);
         Task<List<Vacation>> GetByCompanyId(int companyId);
-        Task<List<Vacation>> GetByDepartmentId(int departmentId);
+        Task<List<Vacation>> GetByDepartmentId(int companyId, int departmentId);
         Task<Vacation> Create(Vacation vacation);
         Task Update(Vacation vacation);
         Task Delete(int id);

@@ -51,7 +51,7 @@ namespace WorkPortalAPI.Controllers
             if (!(await _authRepository.SessionValid(token)))
                 return WPResponse.AuthenticationInvalid();
 
-            return WPResponse.Success(await _departamentRepository.Get());
+            return WPResponse.Success(await _companyRepository.Get());
         }
 
         [HttpGet("DEBUG/{id}")]

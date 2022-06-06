@@ -48,7 +48,7 @@ namespace WorkPortalAPI.Controllers
             return WPResponse.Success(token);
         }
 
-        [HttpPost("register")]
+        [HttpPost("DEBUG/register/DO_NOT_USE_IT_SZYMON_UNLESS_U_KNOW_EXACTLY_WHAT_YA_DOIN")]
         public async Task<IActionResult> Register(User user)
         {
             var validLangs = new List<string>() { "polish", "english" };

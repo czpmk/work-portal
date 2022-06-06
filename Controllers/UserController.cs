@@ -101,6 +101,17 @@ namespace WorkPortalAPI.Controllers
             return WPResponse.Success((await _userRepository.GetInfoForUsers(userId, null, null)).FirstOrDefault());
         }
 
+        [HttpGet("myInfo")]
+        public async Task<IActionResult> GetMyInfo(string token)
+        {
+            if (!(await _authRepository.SessionValid(token)))
+                return WPResponse.AuthenticationInvalid();
+
+            var requestingUser = await _authRepository.GetUserByToken(token);
+
+            return WPResponse.Success((await _userRepository.GetInfoForUsers(requestingUser.Id, null, null)).FirstOrDefault());
+        }
+
         [HttpPut("create")]
         public async Task<IActionResult> CreateUser(User user, string token, int companyId, int departamentId, int roleTypeId)
         {

@@ -38,11 +38,9 @@ namespace WorkPortalAPI.Repositories
             return await _context.Departments.FindAsync(id);
         }
 
-        // TODO: remove ?
         public async Task<IEnumerable<Department>> GetByCompanyId(int companyId)
         {
-            var gowno = from d in _context.Departments where d.CompanyId == companyId select d;
-            return await gowno.ToListAsync();
+            return await _context.Departments.Where(d => d.CompanyId == companyId).ToListAsync();
         }
 
         public async Task Update(Department departament)

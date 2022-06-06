@@ -30,10 +30,28 @@ namespace WorkPortalAPI.Controllers
             this._userRepository = userRepository;
         }
 
-        [HttpGet("DEBUG")]
-        public async Task<IActionResult> Get()
+        [HttpGet]
+        public async Task<IActionResult> Get(string token)
         {
-            return WPResponse.Success(await _companyRepository.Get());
+            if (!(await _authRepository.SessionValid(token)))
+                return WPResponse.AuthenticationInvalid();
+
+            var invokingUser = await _authRepository.GetUserByToken(token);
+            var invokingUserRole = await _authRepository.GetUserRoleByToken(token);
+
+            if (invokingUserRole == null || invokingUserRole.CompanyId == null)
+                return WPResponse.ArgumentDoesNotExist("user not assigned to any company");
+
+            return WPResponse.Success(await _companyRepository.Get(invokingUserRole.CompanyId));
+        }
+
+        [HttpGet("getAll")]
+        public async Task<IActionResult> GetAll(string token)
+        {
+            if (!(await _authRepository.SessionValid(token)))
+                return WPResponse.AuthenticationInvalid();
+
+            return WPResponse.Success(await _departamentRepository.Get());
         }
 
         [HttpGet("DEBUG/{id}")]

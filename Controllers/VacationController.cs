@@ -140,7 +140,6 @@ namespace WorkPortalAPI.Controllers
             if (role.Type == RoleType.USER && !user.IsAdmin)
                 return WPResponse.AccessDenied("Must be a company owner, head of department or admin.");
 
-            //IEnumerable<Vacation> requests;
             if (user.IsAdmin == true)
                 return WPResponse.Success(await _vacationRepository.Get());
 

@@ -30,20 +30,51 @@ namespace WorkPortalAPI.Controllers
             this._userRepository = userRepository;
         }
 
-        [HttpGet("DEBUG")]
-        public async Task<IActionResult> Get()
+        [HttpGet("getAll")]
+        public async Task<IActionResult> GetAll(string token)
         {
+            if (!(await _authRepository.SessionValid(token)))
+                return WPResponse.AuthenticationInvalid();
+
+            var invokingUser = await _authRepository.GetUserByToken(token);
+
+            if (!invokingUser.IsAdmin)
+                return WPResponse.AccessDenied("departaments");
+
             return WPResponse.Success(await _departamentRepository.Get());
         }
 
-        [HttpGet("DEBUG/{id}")]
-        public async Task<IActionResult> Get(int id)
+        [HttpGet]
+        public async Task<IActionResult> Get(string token)
         {
-            var departament = await _departamentRepository.Get(id);
-            if (departament == null)
-                return WPResponse.ArgumentDoesNotExist("id");
+            if (!(await _authRepository.SessionValid(token)))
+                return WPResponse.AuthenticationInvalid();
+
+            var invokingUser = await _authRepository.GetUserByToken(token);
+            var invokingUserRole = await _authRepository.GetUserRoleByToken(token);
+
+            if (invokingUserRole == null || invokingUserRole.DepartmentId == null)
+                return WPResponse.ArgumentDoesNotExist("user not assigned to any departament");
+
+            return WPResponse.Success(await _departamentRepository.Get(invokingUserRole.DepartmentId));
+        }
+
+        [HttpGet("{companyId}")]
+        public async Task<IActionResult> Get(int companyId, string token)
+        {
+            if (!(await _authRepository.SessionValid(token)))
+                return WPResponse.AuthenticationInvalid();
+
+            var invokingUser = await _authRepository.GetUserByToken(token);
+            var invokingUserRole = await _authRepository.GetUserRoleByToken(token);
+
+            if (!invokingUser.IsAdmin && invokingUserRole.CompanyId != companyId)
+                return WPResponse.AccessDenied("departaments");
+
+            if (!(await _companyRepository.Exists(companyId)))
+                return WPResponse.ArgumentDoesNotExist("company");
             else
-                return WPResponse.Success(departament);
+                return WPResponse.Success(await _departamentRepository.GetByCompanyId(companyId));
         }
 
         [HttpPost("create")]

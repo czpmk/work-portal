@@ -141,14 +141,22 @@ namespace WorkPortalAPI.Controllers
         }
 
         [HttpPut("SetHeadOfDepartament")]
-        public async Task<IActionResult> SetHeadOfDepartament(int departamentId, int userId, string token)
+        public async Task<IActionResult> SetHeadOfDepartament(int companyId, int departamentId, int userId, string token)
         {
             if (!(await _authRepository.SessionValid(token)))
                 return WPResponse.AuthenticationInvalid();
 
             var user = await _authRepository.GetUserByToken(token);
-            if (!user.IsAdmin)
-                return WPResponse.AccessDenied("Departament");
+            var role = await _authRepository.GetUserRoleByToken(token);
+            // ADMIN OR COMPANY ADMINISTRATOR (OWNER) ONLY
+            if (!user.IsAdmin && role.Type != RoleType.COMPANY_OWNER)
+                return WPResponse.AccessDenied("Departament/Create");
+
+            if (!user.IsAdmin && role.CompanyId != companyId)
+                return WPResponse.AccessDenied("Departament/Create");
+
+            if (!(await _companyRepository.Exists(companyId)))
+                return WPResponse.ArgumentDoesNotExist("CompanyId");
 
             if (!(await _departamentRepository.Exists(departamentId)))
                 return WPResponse.ArgumentDoesNotExist("departamentId");

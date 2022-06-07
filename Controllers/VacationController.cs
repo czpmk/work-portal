@@ -78,14 +78,35 @@ namespace WorkPortalAPI.Controllers
             if (!(await _authRepository.SessionValid(token)))
                 return WPResponse.AuthenticationInvalid();
 
-            var user = await _authRepository.GetUserByToken(token);
+            var requestingUser = await _authRepository.GetUserByToken(token);
+            var requestingUsersRole = await _roleRepository.GetByUserId(requestingUser.Id);
 
-            //TODO: Privilege check
-            
             var request = await _vacationRepository.Get(requestId);
 
             if (request == null)
                 return WPResponse.ArgumentDoesNotExist("requestId");
+
+            var targetUser = request.UserId;
+            var targetUsersRole = await _roleRepository.GetByUserId(request.UserId);
+
+            //Privilege check
+            var validChecks = 0;
+
+            if (requestingUsersRole.Type == RoleType.HEAD_OF_DEPARTMENT &&
+                requestingUsersRole.CompanyId == targetUsersRole.CompanyId &&
+                requestingUsersRole.DepartmentId == targetUsersRole.DepartmentId)
+                validChecks++;
+
+            else if (requestingUsersRole.Type == RoleType.COMPANY_OWNER &&
+                requestingUsersRole.CompanyId == targetUsersRole.CompanyId)
+                validChecks++;
+
+            else if (requestingUser.IsAdmin)
+                validChecks++;
+
+            if (validChecks == 0)
+                return WPResponse.AccessDenied("access level");
+            // ***
 
             request.State = VacationRequestState.ACCEPTED;
 
@@ -100,14 +121,35 @@ namespace WorkPortalAPI.Controllers
             if (!(await _authRepository.SessionValid(token)))
                 return WPResponse.AuthenticationInvalid();
 
-            var user = await _authRepository.GetUserByToken(token);
-
-            //TODO: Privilege check
+            var requestingUser = await _authRepository.GetUserByToken(token);
+            var requestingUsersRole = await _roleRepository.GetByUserId(requestingUser.Id);
 
             var request = await _vacationRepository.Get(requestId);
 
             if (request == null)
                 return WPResponse.ArgumentDoesNotExist("requestId");
+
+            var targetUser = request.UserId;
+            var targetUsersRole = await _roleRepository.GetByUserId(request.UserId);
+
+            //Privilege check
+            var validChecks = 0;
+
+            if (requestingUsersRole.Type == RoleType.HEAD_OF_DEPARTMENT &&
+                requestingUsersRole.CompanyId == targetUsersRole.CompanyId &&
+                requestingUsersRole.DepartmentId == targetUsersRole.DepartmentId)
+                validChecks++;
+
+            else if (requestingUsersRole.Type == RoleType.COMPANY_OWNER &&
+                requestingUsersRole.CompanyId == targetUsersRole.CompanyId)
+                validChecks++;
+
+            else if (requestingUser.IsAdmin)
+                validChecks++;
+
+            if (validChecks == 0)
+                return WPResponse.AccessDenied("access level");
+            // ***
 
             request.State = VacationRequestState.REJECTED;
 
@@ -116,7 +158,7 @@ namespace WorkPortalAPI.Controllers
             return WPResponse.Success();
         }
 
-        [HttpGet("")]
+        [HttpGet]
         public async Task<IActionResult> getVacationRequestSelf(string token)
         {
             if (!(await _authRepository.SessionValid(token)))

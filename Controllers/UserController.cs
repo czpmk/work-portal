@@ -113,20 +113,34 @@ namespace WorkPortalAPI.Controllers
         }
 
         [HttpPut("create")]
-        public async Task<IActionResult> CreateUser(User user, string token, int companyId, int departamentId, int roleTypeId)
+        public async Task<IActionResult> CreateUser(User user, string token, int companyId, int departamentId, int roleType)
         {
 
             if (!(await _authRepository.SessionValid(token)))
                 return WPResponse.AuthenticationInvalid();
 
-            var invokingUser = await _authRepository.GetUserByToken(token);
-            var invokingUserRole = await _authRepository.GetUserRoleByToken(token);
+            var requestingUser = await _authRepository.GetUserByToken(token);
+            var requestingUsersRole = await _authRepository.GetUserRoleByToken(token);
+
+            //Privilege check
+            var validChecks = 0;
+
+            if (requestingUsersRole.Type == RoleType.COMPANY_OWNER &&
+                requestingUsersRole.CompanyId == companyId)
+                validChecks++;
+
+            else if (requestingUser.IsAdmin)
+                validChecks++;
+
+            if (validChecks == 0)
+                return WPResponse.AccessDenied("access level");
+            // ***
 
             user.Salt = Guid.NewGuid().ToString().Replace("-", "");
             user.Password = Utils.GetSHA256HashOf(user.Salt + user.Password);
 
             //check if invoking user has privilege to create administrator account
-            if ((!invokingUser.IsAdmin) && user.IsAdmin)
+            if ((!requestingUser.IsAdmin) && user.IsAdmin)
             {
                 return WPResponse.AccessDenied("IsAdmin");
             }
@@ -150,12 +164,10 @@ namespace WorkPortalAPI.Controllers
             }
 
             //check if provided role exists
-            if (!Enum.IsDefined(typeof(RoleType), roleTypeId))
+            if (!Enum.IsDefined(typeof(RoleType), roleType))
             {
                 return WPResponse.ArgumentDoesNotExist("roleTypeId");
             }
-
-            //TODO: Privilege Check
 
             var createdUser = await _userRepository.Create(user);
 
@@ -163,7 +175,7 @@ namespace WorkPortalAPI.Controllers
             createdUserRole.CompanyId = companyId;
             createdUserRole.DepartmentId = departamentId;
             createdUserRole.UserId = createdUser.Id;
-            createdUserRole.Type = (RoleType)roleTypeId;
+            createdUserRole.Type = (RoleType)roleType;
 
             await _roleRepository.Create(createdUserRole);
 
@@ -174,38 +186,37 @@ namespace WorkPortalAPI.Controllers
         }
 
         [HttpPatch("edit")]
-        public async Task<IActionResult> EditUserSelf(UserInfo userEdition, string token)
+        public async Task<IActionResult> EditUserSelf(UserInfo newUserInfo, string token)
         {
             if (!(await _authRepository.SessionValid(token)))
                 return WPResponse.AuthenticationInvalid();
 
-            var invokingUser = await _authRepository.GetUserByToken(token);
-            var userToEdit = await _authRepository.GetUserByToken(token);
+            var requestingUser = await _authRepository.GetUserByToken(token);
 
             //set new values
-            if (userEdition.Email != null && !userToEdit.Email.Equals(userEdition.Email))
+            if (newUserInfo.Email != null && !requestingUser.Email.Equals(newUserInfo.Email))
             {
-                userToEdit.Email = userEdition.Email;
+                requestingUser.Email = newUserInfo.Email;
             }
-            if (userEdition.FirstName != null && !userToEdit.FirstName.Equals(userEdition.FirstName))
+            if (newUserInfo.FirstName != null && !requestingUser.FirstName.Equals(newUserInfo.FirstName))
             {
-                userToEdit.FirstName = userEdition.FirstName;
+                requestingUser.FirstName = newUserInfo.FirstName;
             }
-            if (userEdition.Surname != null && !userToEdit.Surname.Equals(userEdition.Surname))
+            if (newUserInfo.Surname != null && !requestingUser.Surname.Equals(newUserInfo.Surname))
             {
-                userToEdit.Surname = userEdition.Surname;
+                requestingUser.Surname = newUserInfo.Surname;
             }
-            if (userEdition.IsAdmin != null && !userToEdit.IsAdmin.Equals(userEdition.IsAdmin))
+            if (newUserInfo.IsAdmin != null && !requestingUser.IsAdmin.Equals(newUserInfo.IsAdmin))
             {
-                if (!invokingUser.IsAdmin) return WPResponse.AccessDenied("IsAdmin");
-                userToEdit.IsAdmin = userEdition.IsAdmin;
+                if (!requestingUser.IsAdmin) return WPResponse.AccessDenied("IsAdmin");
+                requestingUser.IsAdmin = newUserInfo.IsAdmin;
             }
-            if (userEdition.Language != null && !userToEdit.Language.Equals(userEdition.Language))
+            if (newUserInfo.Language != null && !requestingUser.Language.Equals(newUserInfo.Language))
             {
-                userToEdit.Language = userEdition.Language;
+                requestingUser.Language = newUserInfo.Language;
             }
 
-            await _userRepository.Update(userToEdit);
+            await _userRepository.Update(requestingUser);
 
             return WPResponse.Success();
         }
@@ -216,8 +227,28 @@ namespace WorkPortalAPI.Controllers
             if (!(await _authRepository.SessionValid(token)))
                 return WPResponse.AuthenticationInvalid();
 
-            var invokingUser = await _authRepository.GetUserByToken(token);
-            var invokingUserRole = await _authRepository.GetUserRoleByToken(token);
+            var requestingUser = await _authRepository.GetUserByToken(token);
+            var requestingUsersRole = await _authRepository.GetUserRoleByToken(token);
+
+            var targetUser = await _userRepository.Get(userId);
+            var targetUsersRole = await _roleRepository.GetByUserId(userId);
+
+            //Privilege check
+            var validChecks = 0;
+
+            if (requestingUsersRole.Type == RoleType.COMPANY_OWNER &&
+                requestingUsersRole.CompanyId == targetUsersRole.CompanyId)
+                validChecks++;
+
+            else if (requestingUser.IsAdmin)
+                validChecks++;
+
+            else if (requestingUser.Id == targetUser.Id)
+                validChecks++;
+
+            if (validChecks == 0)
+                return WPResponse.AccessDenied("access level");
+            // ***
 
             //check if user exists
             if (!(await _userRepository.Exists(userId)))
@@ -225,46 +256,60 @@ namespace WorkPortalAPI.Controllers
                 return WPResponse.ArgumentDoesNotExist("userId");
             }
 
-            var oldUserInfo = await _userRepository.Get(userId);
-
             //set new values
-            if (newUserInfo.Email != null && !oldUserInfo.Email.Equals(newUserInfo.Email))
+            if (newUserInfo.Email != null && !targetUser.Email.Equals(newUserInfo.Email))
             {
-                oldUserInfo.Email = newUserInfo.Email;
+                targetUser.Email = newUserInfo.Email;
             }
-            if (newUserInfo.FirstName != null && !oldUserInfo.FirstName.Equals(newUserInfo.FirstName))
+            if (newUserInfo.FirstName != null && !targetUser.FirstName.Equals(newUserInfo.FirstName))
             {
-                oldUserInfo.FirstName = newUserInfo.FirstName;
+                targetUser.FirstName = newUserInfo.FirstName;
             }
-            if (newUserInfo.Surname != null && !oldUserInfo.Surname.Equals(newUserInfo.Surname))
+            if (newUserInfo.Surname != null && !targetUser.Surname.Equals(newUserInfo.Surname))
             {
-                oldUserInfo.Surname = newUserInfo.Surname;
+                targetUser.Surname = newUserInfo.Surname;
             }
-            if (newUserInfo.IsAdmin != null && !oldUserInfo.IsAdmin.Equals(newUserInfo.IsAdmin))
+            if (newUserInfo.IsAdmin != null && !targetUser.IsAdmin.Equals(newUserInfo.IsAdmin))
             {
-                if (!invokingUser.IsAdmin) return WPResponse.AccessDenied("IsAdmin");
-                oldUserInfo.IsAdmin = newUserInfo.IsAdmin;
+                if (!requestingUser.IsAdmin) return WPResponse.AccessDenied("IsAdmin");
+                targetUser.IsAdmin = newUserInfo.IsAdmin;
             }
-            if (newUserInfo.Language != null && !oldUserInfo.Language.Equals(newUserInfo.Language))
+            if (newUserInfo.Language != null && !targetUser.Language.Equals(newUserInfo.Language))
             {
-                oldUserInfo.Language = newUserInfo.Language;
+                targetUser.Language = newUserInfo.Language;
             }
 
-            //TODO: Privilege check
-
-            await _userRepository.Update(oldUserInfo);
+            await _userRepository.Update(targetUser);
 
             return WPResponse.Success();
         }
 
         [HttpPatch("changeRole/{userId}")]
-        public async Task<IActionResult> ChangeRole(string token, int newCompanyId, int newDepartamentId, int newRoleTypeId, int userId)
+        public async Task<IActionResult> ChangeRole(string token, int companyId, int departamentId, int roleType, int userId)
         {
             if (!(await _authRepository.SessionValid(token)))
                 return WPResponse.AuthenticationInvalid();
 
-            var invokingUser = await _authRepository.GetUserByToken(token);
-            var invokingUserRole = await _authRepository.GetUserRoleByToken(token);
+            var requestingUser = await _authRepository.GetUserByToken(token);
+            var requestingUsersRole = await _authRepository.GetUserRoleByToken(token);
+
+            var targetUser = await _userRepository.Get(userId);
+            var targetUsersRole = await _roleRepository.GetByUserId(userId);
+
+            //Privilege check
+            var validChecks = 0;
+
+            if (requestingUsersRole.Type == RoleType.COMPANY_OWNER &&
+                companyId == null &&                        // company owner cannot change the user's assigned company
+                roleType != (int)RoleType.COMPANY_OWNER)    // company owner cannot grant company owner access level
+                validChecks++;
+
+            else if (requestingUser.IsAdmin)
+                validChecks++;
+
+            if (validChecks == 0)
+                return WPResponse.AccessDenied("access level");
+            // ***
 
             //check if user exists
             if (!(await _userRepository.Exists(userId)))
@@ -272,29 +317,33 @@ namespace WorkPortalAPI.Controllers
                 return WPResponse.ArgumentDoesNotExist("userId");
             }
 
+            //check if user's role exists
+            if (targetUsersRole == null)
+            {
+                return WPResponse.ArgumentDoesNotExist("userId");
+            }
+
             //check if provided company exists
-            if (!(await _companyRepository.Exists(newCompanyId)))
+            if (!(await _companyRepository.Exists(companyId)))
             {
                 return WPResponse.ArgumentDoesNotExist("newCompanyId");
             }
 
             //check if provided departament exists
-            if (!(await _departamentRepository.Exists(newDepartamentId)))
+            if (!(await _departamentRepository.Exists(departamentId)))
             {
                 return WPResponse.ArgumentDoesNotExist("newDepartamentId");
             }
 
             //check if provided role exists
-            if (!Enum.IsDefined(typeof(RoleType), newRoleTypeId))
+            if (!Enum.IsDefined(typeof(RoleType), roleType))
             {
                 return WPResponse.ArgumentDoesNotExist("newRoleTypeId");
             }
 
-            //TODO: Privilege check
-
             var role = await _roleRepository.GetByUserId(userId);
             // move user to a proper chat
-            if (role.CompanyId != newCompanyId)
+            if (role.CompanyId != companyId)
             {
                 if (role.CompanyId != null)
                 {
@@ -306,7 +355,7 @@ namespace WorkPortalAPI.Controllers
                             await _chatViewReportRepository.Delete(oldCvr.Id);
                     }
                 }
-                var companyChat = await _chatRepository.GetCompanyChat(newCompanyId);
+                var companyChat = await _chatRepository.GetCompanyChat(companyId);
                 await _chatViewReportRepository.Create(userId, companyChat.Id);
 
                 // move to a proper departament when changing companies
@@ -320,10 +369,10 @@ namespace WorkPortalAPI.Controllers
                             await _chatViewReportRepository.Delete(oldCvr.Id);
                     }
                 }
-                var departamentChat = await _chatRepository.GetDepartamentChat(newCompanyId, newDepartamentId);
+                var departamentChat = await _chatRepository.GetDepartamentChat(companyId, departamentId);
                 await _chatViewReportRepository.Create(userId, departamentChat.Id);
             }
-            else if (role.DepartmentId != newDepartamentId)
+            else if (role.DepartmentId != departamentId)
             {
                 if (role.DepartmentId != null)
                 {
@@ -335,13 +384,13 @@ namespace WorkPortalAPI.Controllers
                             await _chatViewReportRepository.Delete(oldCvr.Id);
                     }
                 }
-                var departamentChat = await _chatRepository.GetDepartamentChat(newCompanyId, newDepartamentId);
+                var departamentChat = await _chatRepository.GetDepartamentChat(companyId, departamentId);
                 await _chatViewReportRepository.Create(userId, departamentChat.Id);
             }
 
-            role.CompanyId = newCompanyId;
-            role.DepartmentId = newDepartamentId;
-            role.Type = (RoleType)newRoleTypeId;
+            role.CompanyId = companyId;
+            role.DepartmentId = departamentId;
+            role.Type = (RoleType)roleType;
 
             await _roleRepository.Update(role);
 
@@ -355,15 +404,30 @@ namespace WorkPortalAPI.Controllers
             if (!(await _authRepository.SessionValid(token)))
                 return WPResponse.AuthenticationInvalid();
 
-            var invokingUser = await _authRepository.GetUserByToken(token);
-            var invokingUserRole = await _authRepository.GetUserRoleByToken(token);
+            var requestingUser = await _authRepository.GetUserByToken(token);
+            var requestingUsersRole = await _authRepository.GetUserRoleByToken(token);
+
+            var targetUser = await _userRepository.Get(userId);
+            var targetUsersRole = await _roleRepository.GetByUserId(userId);
+
+            //Privilege check
+            var validChecks = 0;
+
+            if (requestingUsersRole.Type == RoleType.COMPANY_OWNER &&
+                requestingUsersRole.CompanyId == targetUsersRole.CompanyId)
+                validChecks++;
+
+            else if (requestingUser.IsAdmin)
+                validChecks++;
+
+            if (validChecks == 0)
+                return WPResponse.AccessDenied("access level");
+            // ***
 
             if (!(await _userRepository.Exists(userId)))
             {
                 return WPResponse.ArgumentDoesNotExist("userId");
             }
-
-            //TODO: Privilege check
 
             await _userRepository.Delete(userId);
 

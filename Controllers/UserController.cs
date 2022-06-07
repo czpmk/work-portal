@@ -301,6 +301,7 @@ namespace WorkPortalAPI.Controllers
 
             if (requestingUsersRole.Type == RoleType.COMPANY_OWNER &&
                 companyId == null &&                        // company owner cannot change the user's assigned company
+                requestingUsersRole.CompanyId == targetUsersRole.CompanyId && // can only change role of the users in his company
                 roleType != (int)RoleType.COMPANY_OWNER)    // company owner cannot grant company owner access level
                 validChecks++;
 

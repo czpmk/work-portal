@@ -89,6 +89,9 @@ namespace WorkPortalAPI.Controllers
             if (!user.IsAdmin && role.Type != RoleType.COMPANY_OWNER)
                 return WPResponse.AccessDenied("Departament/Create");
 
+            if (!user.IsAdmin && role.CompanyId != departament.CompanyId)
+                return WPResponse.AccessDenied("Departament/Create");
+
             if (!(await _companyRepository.Exists(departament.CompanyId)))
                 return WPResponse.ArgumentDoesNotExist("CompanyId");
 

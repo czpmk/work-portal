@@ -17,12 +17,14 @@ namespace WorkPortalAPI.Controllers
         private readonly IVacationRepository _vacationRepository;
         private readonly IAuthRepository _authRepository;
         private readonly IRoleRepository _roleRepository;
+        private readonly IUserRepository _userRepository;
 
-        public VacationController(IVacationRepository vacationRepository, IAuthRepository authRepository, IRoleRepository roleRepository)
+        public VacationController(IVacationRepository vacationRepository, IUserRepository userRepository, IAuthRepository authRepository, IRoleRepository roleRepository)
         {
             this._vacationRepository = vacationRepository;
             this._authRepository = authRepository;
             this._roleRepository = roleRepository;
+            this._userRepository = userRepository;
         }
 
         [HttpGet("DEBUG")]
@@ -192,6 +194,58 @@ namespace WorkPortalAPI.Controllers
                 return WPResponse.Success(await _vacationRepository.GetByDepartmentId(role.CompanyId, role.DepartmentId));
 
             return WPResponse.InternalError();
+        }
+
+        [HttpGet("getRequestsForApproverWithUserInfo")]
+        public async Task<IActionResult> getVacationRequestsWithUserInfo(string token)
+        {
+            if (!(await _authRepository.SessionValid(token)))
+                return WPResponse.AuthenticationInvalid();
+
+            var user = await _authRepository.GetUserByToken(token);
+            var role = await _roleRepository.GetByUserId(user.Id);
+
+            List<Vacation> requests = null;
+
+            if (role.Type == RoleType.USER && !user.IsAdmin)
+                return WPResponse.AccessDenied("Must be a company owner, head of department or admin.");
+
+            if (user.IsAdmin == true)
+                requests = await _vacationRepository.Get();
+
+            else if (role.Type == RoleType.COMPANY_OWNER)
+                requests = await _vacationRepository.GetByCompanyId(role.CompanyId);
+
+            else if (role.Type == RoleType.HEAD_OF_DEPARTMENT)
+                requests = await _vacationRepository.GetByDepartmentId(role.CompanyId, role.DepartmentId);
+
+            var users = new List<User>();
+            foreach (var r in requests)
+            {
+                if (users.Any(x => r.UserId == x.Id))
+                    continue;
+
+                if (await _userRepository.Exists(r.UserId))
+                {
+                    users.Add(await _userRepository.Get(r.UserId));
+                }
+            }
+
+            var results = requests.Select(x => new
+            {
+                Id = x.Id,
+                UserId = x.UserId,
+                Type = x.Type,
+                State = x.State,
+                ModificationTime = x.ModificationTime,
+                StartDate = x.StartDate,
+                EndDate = x.EndDate,
+                FirstName = users.Any(u => u.Id == x.UserId) ? users.Where(u => u.Id == x.UserId).FirstOrDefault().FirstName : null,
+                LastName = users.Any(u => u.Id == x.UserId) ? users.Where(u => u.Id == x.UserId).FirstOrDefault().Surname : null,
+            }
+            );
+
+            return WPResponse.Success(results);
         }
     }
 }

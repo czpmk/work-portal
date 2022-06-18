@@ -33,6 +33,11 @@ namespace WorkPortalAPI.Repositories
             return await _context.Vacations.ToListAsync();
         }
 
+        public async Task<Boolean> Exists(int id)
+        {
+            return await _context.Vacations.FindAsync(id) != null;
+        }
+
         public async Task<Vacation> Get(int id)
         {
             return await _context.Vacations.FindAsync(id);

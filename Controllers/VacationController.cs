@@ -51,6 +51,21 @@ namespace WorkPortalAPI.Controllers
             return WPResponse.Success();
         }
 
+        [HttpDelete("DEBUG/resetVacations/{id}")]
+        public async Task<IActionResult> RemoveChatViewReport(int id)
+        {
+            if (!(await _vacationRepository.Exists(id)))
+            {
+                return WPResponse.ArgumentDoesNotExist("id");
+            }
+
+            else
+            {
+                await _vacationRepository.Delete(id);
+                return WPResponse.Success();
+            }
+        }
+
         [HttpPut("createRequest")]
         public async Task<IActionResult> CreateVacationRequest(string token, Vacation vacation)
         {

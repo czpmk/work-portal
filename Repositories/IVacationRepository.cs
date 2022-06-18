@@ -17,5 +17,6 @@ namespace WorkPortalAPI.Repositories
         Task Update(Vacation vacation);
         Task Delete(int id);
         Task DeleteAll();
+        Task<Boolean> Exists(int id);
     }
 }

@@ -267,7 +267,12 @@ namespace WorkPortalAPI.Controllers
                 messages.AddRange(await _chatRepository.GetMessagesInRange(chatId, startUUID, endUUID));
             }
 
-            return WPResponse.Success(messages);
+            var messagesDict = new Dictionary<string, object>() {
+                        {"messages", messages},
+                        {"description", await _chatRepository.GetChatDescriptionDictionary(chatId)}
+                    };
+
+            return WPResponse.Success(messagesDict);
         }
 
         [HttpPut("setStatus")]

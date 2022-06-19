@@ -39,7 +39,11 @@ namespace WorkPortalAPI.Repositories
         public async Task<Boolean> Exists(Chat chat)
         {
             List<Chat> chatList = new List<Chat>();
-            if (IsPrivateChat(chat) && await PrivateChatExists(chat.FirstUserId.GetValueOrDefault(), chat.SecondUserId.GetValueOrDefault()))
+            if (chat != null && await Exists(chat.Id))
+            {
+                return false;
+            }
+            else if (IsPrivateChat(chat) && await PrivateChatExists(chat.FirstUserId.GetValueOrDefault(), chat.SecondUserId.GetValueOrDefault()))
             {
                 chatList.Add(await GetPrivateChat(chat.FirstUserId.GetValueOrDefault(),
                     chat.SecondUserId.GetValueOrDefault()));
@@ -227,6 +231,9 @@ namespace WorkPortalAPI.Repositories
             chatDescription.Add("users", null);
             chatDescription.Add("company", null);
             chatDescription.Add("department", null);
+
+            if (!(await Exists(chatId)))
+                return chatDescription;
 
             var results =
                 from u in _context.Users

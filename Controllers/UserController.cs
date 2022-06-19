@@ -171,11 +171,12 @@ namespace WorkPortalAPI.Controllers
 
             var createdUser = await _userRepository.Create(user);
 
-            Role createdUserRole = new();
-            createdUserRole.CompanyId = companyId;
-            createdUserRole.DepartmentId = departamentId;
-            createdUserRole.UserId = createdUser.Id;
-            createdUserRole.Type = (RoleType)roleType;
+            var createdUserRole = new Role { 
+                CompanyId = companyId,
+                DepartmentId = departamentId,
+                UserId = createdUser.Id,
+                Type = (RoleType) roleType
+            };
 
             await _roleRepository.Create(createdUserRole);
 

@@ -20,10 +20,13 @@ namespace WorkPortalAPI.Controllers
         private readonly IDepartmentRepository _departamentRepository;
         private readonly IChatViewReportRepository _chatViewReportRepository;
         private readonly IChatRepository _chatRepository;
+        private readonly IStatusRepository _statusRepository;
+        private readonly IVacationRepository _vacationRepository;
 
         public UserController(IAuthRepository authRepository, IUserRepository userRepository, IRoleRepository roleRepository,
                                 ICompanyRepository companyRepository, IDepartmentRepository departamentRepository,
-                                IChatViewReportRepository chatViewReportRepository, IChatRepository chatRepository)
+                                IChatViewReportRepository chatViewReportRepository, IChatRepository chatRepository,
+                                IStatusRepository statusRepository, IVacationRepository vacationRepository)
         {
             this._userRepository = userRepository;
             this._authRepository = authRepository;
@@ -32,6 +35,8 @@ namespace WorkPortalAPI.Controllers
             this._departamentRepository = departamentRepository;
             this._chatViewReportRepository = chatViewReportRepository;
             this._chatRepository = chatRepository;
+            this._statusRepository = statusRepository;
+            this._vacationRepository = vacationRepository;
         }
 
         [HttpGet("DEBUG")]
@@ -455,6 +460,116 @@ namespace WorkPortalAPI.Controllers
                 return WPResponse.AuthenticationInvalid();
 
             IEnumerable<dynamic> result = await _userRepository.FindUsers(userName, companyId, departamentId);
+
+            return WPResponse.Success(result);
+        }
+
+        private static double calculateWorkTime(List<Status> statuses)
+        {
+            double workTime = .0d;
+            double breakTime = .0d;
+            bool workStarted = false;
+            DateTime workTimestamp = DateTime.MinValue;
+            bool breakStarted = false;
+            DateTime breakTimestamp = DateTime.MinValue;
+
+            if (statuses.Count == 1) //there must be a minimum of 2 statuses to be valid
+            {
+                return -1;
+            }
+
+            statuses.Sort((a, b) => a.Timestamp.CompareTo(b.Timestamp));
+
+            foreach (var status in statuses)
+            {
+
+                if (status.Type == StatusType.Work)
+                {
+                    if (!workStarted)
+                    {
+                        workStarted = true;
+                        workTimestamp = status.Timestamp;
+                    }
+                    else if (breakStarted)
+                    {
+                        breakStarted = false;
+                        breakTime += (double)(status.Timestamp.Ticks - breakTimestamp.Ticks) / TimeSpan.TicksPerHour;
+                    }
+                }
+                else if (status.Type == StatusType.Break)
+                {
+                    if (!workStarted) return -1; //invalid status
+                    if (!breakStarted)
+                    {
+                        breakStarted = true;
+                        breakTimestamp = status.Timestamp;
+                    }
+                }
+                else if (status.Type == StatusType.OutOfOffice)
+                {
+                    if (breakStarted)
+                    {
+                        breakStarted = false;
+                        breakTime += (double)(status.Timestamp.Ticks - breakTimestamp.Ticks) / TimeSpan.TicksPerHour;
+                    }
+                    if (workStarted)
+                    {
+                        workStarted = false;
+                        workTime += (double)(status.Timestamp.Ticks - workTimestamp.Ticks) / TimeSpan.TicksPerHour;
+                    }
+                }
+
+            }
+
+
+            return workTime - breakTime;
+        }
+
+        [HttpGet("getStatistics/{year}/{month}")]
+        public async Task<IActionResult> getStatistics(string token, int year, int month)
+        {
+            if (!(await _authRepository.SessionValid(token)))
+                return WPResponse.AuthenticationInvalid();
+
+            var user = await _authRepository.GetUserByToken(token);
+            var statuses = await _statusRepository.Get(user.Id, month, year);
+            var vacations = await _vacationRepository.GetByUserId(user.Id);
+
+            int vacationDays = 0;
+            int workingDays = 0;
+            double sumOfWorkTime = 0;
+
+            for (var day = 1; day <= DateTime.DaysInMonth(year, month); day++)
+            {
+                //select one day of vacations
+                DateTime tmpDate = new DateTime(year, month, day);
+                var tmpVacations = vacations.Where(v => tmpDate >= v.StartDate
+                                                    && tmpDate <= (new DateTime(v.EndDate.Ticks)).AddTicks(TimeSpan.TicksPerDay - 1)
+                                                    && v.State == VacationRequestState.ACCEPTED).ToList();
+
+                //if there is at least one vacation request - count it and continue
+                if (tmpVacations.Count > 0)
+                {
+                    vacationDays += 1;
+                    continue;
+                }
+
+                //select one day
+                var tmpWork = statuses.Where(s => s.Timestamp.Day == day
+                                            && s.Timestamp.Month == month
+                                            && s.Timestamp.Year == year).ToList();
+
+                //calculate worktime
+                var workTime = calculateWorkTime(tmpWork);
+                sumOfWorkTime += workTime;
+
+                if (workTime > 0) //presence at work
+                {
+                    workingDays += 1;
+                }
+            }
+
+            var result = new Dictionary<string, object>() { { "sumOfWorkTime", sumOfWorkTime }, { "workingDays", workingDays }, { "vacationDays", vacationDays } };
 
             return WPResponse.Success(result);
         }

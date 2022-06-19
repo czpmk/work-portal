@@ -188,16 +188,16 @@ namespace WorkPortalAPI.Controllers
             createdUser.Password = null;
             createdUser.Salt = null;
 
-            if (await _companyRepository.Exists(createdUserRole.CompanyId) && await _chatRepository.GetCompanyChat(createdUserRole.CompanyId) != null)
+            if (!(await _companyRepository.Exists(companyId)) && await _chatRepository.GetCompanyChat(companyId) != null)
             {
-                var companyChat = await _chatRepository.GetCompanyChat(createdUserRole.CompanyId);
+                var companyChat = await _chatRepository.GetCompanyChat(companyId);
                 await _chatViewReportRepository.Create(createdUser.Id, companyChat.Id);
             }
 
-            if (await _departamentRepository.Exists(createdUserRole.DepartmentId) &&
-                await _chatRepository.GetDepartamentChat(createdUserRole.CompanyId, createdUserRole.DepartmentId) != null)
+            if (!(await _departamentRepository.Exists(departamentId)) &&
+                await _chatRepository.GetDepartamentChat(createdUserRole.CompanyId, departamentId) != null)
             {
-                var departamentChat = await _chatRepository.GetDepartamentChat(createdUserRole.CompanyId, createdUserRole.DepartmentId);
+                var departamentChat = await _chatRepository.GetDepartamentChat(companyId, departamentId);
                 await _chatViewReportRepository.Create(createdUser.Id, departamentChat.Id);
             }
 

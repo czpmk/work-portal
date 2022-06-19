@@ -141,9 +141,9 @@ namespace WorkPortalAPI.Controllers
                 else
                 {
                     //status.Add(cvr.ChatId, cvr.MessageUUID == (await _chatRepository.GetLastMessage(cvr.ChatId)).UUID);
-                    status.Add(cvr.ChatId, new Dictionary<string, Object>() { 
-                        { "upToDate", cvr.MessageUUID == (await _chatRepository.GetLastMessage(cvr.ChatId)).UUID }, 
-                        { "timestamp", lastMessage.Timestamp } 
+                    status.Add(cvr.ChatId, new Dictionary<string, Object>() {
+                        { "upToDate", cvr.MessageUUID == (await _chatRepository.GetLastMessage(cvr.ChatId)).UUID },
+                        { "timestamp", lastMessage.Timestamp }
                     });
                 }
             }
@@ -311,12 +311,19 @@ namespace WorkPortalAPI.Controllers
 
             foreach (var cvr in chatViewReports)
             {
-                chats.Add(
-                    new Dictionary<string, object>() {
-                        {"chat", await _chatRepository.Get(cvr.ChatId)},
-                        {"description", await _chatRepository.GetChatDescriptionDictionary(cvr.ChatId)}
-                    }
-                    );
+                if (await _chatRepository.Exists(cvr.ChatId))
+                {
+                    chats.Add(
+                        new Dictionary<string, object>() {
+                                            {"chat", await _chatRepository.Get(cvr.ChatId)},
+                                            {"description", await _chatRepository.GetChatDescriptionDictionary(cvr.ChatId)}
+                        }
+                        );
+                }
+                else
+                {
+                    await _chatViewReportRepository.Delete(cvr.Id);
+                }
             }
 
             return WPResponse.Success(chats);

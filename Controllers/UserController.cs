@@ -188,14 +188,26 @@ namespace WorkPortalAPI.Controllers
             createdUser.Password = null;
             createdUser.Salt = null;
 
-            if (!(await _companyRepository.Exists(companyId)) && await _chatRepository.GetCompanyChat(companyId) != null)
+            if (!(await _companyRepository.Exists(companyId)))
+                return WPResponse.ArgumentDoesNotExist("KURLA COMPANY ID");
+
+            if ((await _chatRepository.GetCompanyChat(companyId)) == null)
+                return WPResponse.ArgumentDoesNotExist("GET COMPANY RETURNED NULL");
+
+            if (!(await _departamentRepository.Exists(departamentId)))
+                return WPResponse.ArgumentDoesNotExist("KURLA DEPARTAMENT ID");
+
+            if ((await _chatRepository.GetDepartamentChat(createdUserRole.CompanyId, departamentId)) == null)
+                return WPResponse.ArgumentDoesNotExist("GET DEPARTAMENT RETURNED NULL");
+
+            if ((await _companyRepository.Exists(companyId)) && (await _chatRepository.GetCompanyChat(companyId)) != null)
             {
                 var companyChat = await _chatRepository.GetCompanyChat(companyId);
                 await _chatViewReportRepository.Create(createdUser.Id, companyChat.Id);
             }
 
-            if (!(await _departamentRepository.Exists(departamentId)) &&
-                await _chatRepository.GetDepartamentChat(createdUserRole.CompanyId, departamentId) != null)
+            if ((await _departamentRepository.Exists(departamentId)) &&
+                (await _chatRepository.GetDepartamentChat(createdUserRole.CompanyId, departamentId)) != null)
             {
                 var departamentChat = await _chatRepository.GetDepartamentChat(companyId, departamentId);
                 await _chatViewReportRepository.Create(createdUser.Id, departamentChat.Id);

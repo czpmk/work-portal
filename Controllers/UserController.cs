@@ -182,6 +182,19 @@ namespace WorkPortalAPI.Controllers
             createdUser.Password = null;
             createdUser.Salt = null;
 
+            if (await _companyRepository.Exists(createdUserRole.CompanyId) && await _chatRepository.GetCompanyChat(createdUserRole.CompanyId) != null)
+            {
+                var companyChat = await _chatRepository.GetCompanyChat(createdUserRole.CompanyId);
+                await _chatViewReportRepository.Create(createdUser.Id, companyChat.Id);
+            }
+
+            if (await _departamentRepository.Exists(createdUserRole.DepartmentId) &&
+                await _chatRepository.GetDepartamentChat(createdUserRole.CompanyId, createdUserRole.DepartmentId) != null)
+            {
+                var departamentChat = await _chatRepository.GetDepartamentChat(createdUserRole.CompanyId, createdUserRole.DepartmentId);
+                await _chatViewReportRepository.Create(createdUser.Id, departamentChat.Id);
+            }
+
             return WPResponse.Success(createdUser);
         }
 

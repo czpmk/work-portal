@@ -191,7 +191,6 @@ namespace WorkPortalAPI.Controllers
             sheet.Range["E4"].Text = "U - Urlop";
             sheet.Range["E5"].Text = "B - Błąd statusu";
 
-            //TODO: Add vacations
             var vacations = await _vacationRepository.GetByUserId(user.Id);
 
             for (var day = 1; day <= DateTime.DaysInMonth(year, month); day++)

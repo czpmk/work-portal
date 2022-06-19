@@ -349,7 +349,7 @@ namespace WorkPortalAPI.Controllers
 
             if (statuses.Count == 1) //there must be a minimum of 2 statuses to be valid
             {
-                return -1;
+                return 0;
             }
 
             statuses.Sort((a, b) => a.Timestamp.CompareTo(b.Timestamp));
@@ -372,7 +372,7 @@ namespace WorkPortalAPI.Controllers
                 }
                 else if (status.Type == StatusType.Break)
                 {
-                    if (!workStarted) return -1; //invalid status
+                    if (!workStarted) return 0; //invalid status
                     if (!breakStarted)
                     {
                         breakStarted = true;

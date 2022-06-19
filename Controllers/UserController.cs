@@ -185,9 +185,6 @@ namespace WorkPortalAPI.Controllers
 
             await _roleRepository.Create(createdUserRole);
 
-            createdUser.Password = null;
-            createdUser.Salt = null;
-
             if (!(await _companyRepository.Exists(companyId)))
                 return WPResponse.ArgumentDoesNotExist("KURLA COMPANY ID");
 

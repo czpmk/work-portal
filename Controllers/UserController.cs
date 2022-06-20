@@ -579,5 +579,21 @@ namespace WorkPortalAPI.Controllers
             await _userRepository.DeleteAll();
             return WPResponse.Success();
         }
+
+        [HttpPatch("DEBUG/setAdmin")]
+        public async Task<IActionResult> SetAdmin(int userId, bool isAdmin)
+        {
+            var targetUser = await _userRepository.Get(userId);
+
+            if (targetUser == null)
+                return WPResponse.ArgumentDoesNotExist("userId");
+            else if (isAdmin == null)
+                return WPResponse.ArgumentInvalid("isAdmin");
+
+            targetUser.IsAdmin = isAdmin;
+            await _userRepository.Update(targetUser);
+
+            return WPResponse.Success();
+        }
     }
 }
